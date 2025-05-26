@@ -23,12 +23,13 @@ import * as XLSX from "xlsx";
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import PrintIcon from '@mui/icons-material/Print';
 
-export default function AllTrips({ trips }) {
+export default function AllTrips({ trips, trucks }) {
   const [selectedTrips, setSelectedTrips] = useState([]);
   const [filters, setFilters] = useState({
     truckNumber: '',
     startDate: '',
-    endDate: ''
+    endDate: '',
+    loadCapacity: ''
   });
 
   const columns = [
@@ -37,6 +38,9 @@ export default function AllTrips({ trips }) {
 
   // Get unique truck numbers for the filter dropdown
   const uniqueTruckNumbers = [...new Set(trips.map(trip => trip.truckNumber))];
+
+  // Get unique truck load capacities for the filter dropdown
+  const uniqueLoadCapacities = [...new Set(trucks.map(truck => truck.loadCapacity))];
 
   const handleFilterChange = (field) => (event) => {
     setFilters(prev => ({
@@ -50,7 +54,9 @@ export default function AllTrips({ trips }) {
     const matchesTruck = !filters.truckNumber || trip.truckNumber === filters.truckNumber;
     const matchesStartDate = !filters.startDate || trip.startDate >= filters.startDate;
     const matchesEndDate = !filters.endDate || trip.endDate <= filters.endDate;
-    return matchesTruck && matchesStartDate && matchesEndDate;
+    const matchesLoadCapacity = !filters.loadCapacity || 
+      trucks.find(truck => truck.truckNumber === trip.truckNumber)?.loadCapacity === filters.loadCapacity;
+    return matchesTruck && matchesStartDate && matchesEndDate && matchesLoadCapacity;
   });
 
   const exportToExcel = (data, filename = "all_trips.xlsx") => {
@@ -230,7 +236,7 @@ export default function AllTrips({ trips }) {
       
       {/* Filters Section */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={3}>
           <FormControl fullWidth>
             <InputLabel>Truck Number</InputLabel>
             <Select
@@ -247,21 +253,38 @@ export default function AllTrips({ trips }) {
             </Select>
           </FormControl>
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={3}>
+          <FormControl fullWidth>
+            <InputLabel>Load Capacity</InputLabel>
+            <Select
+              value={filters.loadCapacity}
+              onChange={handleFilterChange('loadCapacity')}
+              label="Load Capacity"
+            >
+              <MenuItem value="">All Capacities</MenuItem>
+              {uniqueLoadCapacities.map(capacity => (
+                <MenuItem key={capacity} value={capacity}>
+                  {capacity} Ton
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid item xs={12} sm={3}>
           <TextField
             fullWidth
-            label="Start Date"
             type="date"
+            label="Start Date"
             value={filters.startDate}
             onChange={handleFilterChange('startDate')}
             InputLabelProps={{ shrink: true }}
           />
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={3}>
           <TextField
             fullWidth
-            label="End Date"
             type="date"
+            label="End Date"
             value={filters.endDate}
             onChange={handleFilterChange('endDate')}
             InputLabelProps={{ shrink: true }}

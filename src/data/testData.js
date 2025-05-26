@@ -1,7 +1,7 @@
 export const trucks = [
-  { id: 1, truckNumber: "GJ32T9977", type: "Tata 407", status: "Active" },
-  { id: 2, truckNumber: "GJ32T9988", type: "Eicher", status: "Active" },
-  { id: 3, truckNumber: "GJ32T9999", type: "BharatBenz", status: "Inactive" },
+  { id: 1, truckNumber: "GJ32T9977", type: "Tata 407", loadCapacity: "4", status: "Active" },
+  { id: 2, truckNumber: "GJ32T9988", type: "Eicher", loadCapacity: "6", status: "Active" },
+  { id: 3, truckNumber: "GJ32T9999", type: "BharatBenz", loadCapacity: "8", status: "Inactive" },
 ];
 
 export const trips = [

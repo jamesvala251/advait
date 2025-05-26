@@ -6,6 +6,7 @@ import TripTable from "./components/TripTable";
 import Reports from "./components/Reports";
 import AllTrips from "./components/AllTrips";
 import DriverReports from "./components/DriverReports";
+import TruckExpenses from "./components/TruckExpenses";
 import {
   AppBar,
   Toolbar,
@@ -23,10 +24,12 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import PersonIcon from '@mui/icons-material/Person';
+import ReceiptIcon from '@mui/icons-material/Receipt';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 const TRUCKS_KEY = "trucks_data";
 const TRIPS_KEY = "trips_data";
+const EXPENSES_KEY = "expenses_data";
 
 const theme = createTheme({
   palette: {
@@ -43,6 +46,7 @@ const NAV = [
   { label: "Trip Entry", icon: <AssignmentIcon />, value: "entry" },
   { label: "All Trips", icon: <TableChartIcon />, value: "alltrips" },
   { label: "Truck Management", icon: <DirectionsCarIcon />, value: "trucks" },
+  { label: "Truck Expenses", icon: <ReceiptIcon />, value: "expenses" },
   { label: "Profit/Loss", icon: <TableChartIcon />, value: "profit" },
   { label: "Reports", icon: <BarChartIcon />, value: "reports" },
   { label: "Driver Reports", icon: <PersonIcon />, value: "driverreports" },
@@ -58,6 +62,10 @@ function App() {
     const stored = localStorage.getItem(TRIPS_KEY);
     return stored ? JSON.parse(stored) : testTrips;
   });
+  const [expenses, setExpenses] = useState(() => {
+    const stored = localStorage.getItem(EXPENSES_KEY);
+    return stored ? JSON.parse(stored) : [];
+  });
   const [page, setPage] = useState("entry");
 
   // Save to localStorage on change
@@ -67,6 +75,9 @@ function App() {
   useEffect(() => {
     localStorage.setItem(TRIPS_KEY, JSON.stringify(trips));
   }, [trips]);
+  useEffect(() => {
+    localStorage.setItem(EXPENSES_KEY, JSON.stringify(expenses));
+  }, [expenses]);
 
   const addTrip = (trip) => setTrips([...trips, trip]);
 
@@ -111,8 +122,9 @@ function App() {
         <Paper elevation={3} sx={{ p: { xs: 1, sm: 3 }, mt: 4, maxWidth: '100%', overflowX: 'auto' }}>
           <Box>
             {page === "entry" && <TripEntryForm trucks={trucks} addTrip={addTrip} trips={trips} />}
-            {page === "alltrips" && <AllTrips trips={trips} />}
+            {page === "alltrips" && <AllTrips trips={trips} trucks={trucks} />}
             {page === "trucks" && <TruckManager trucks={trucks} setTrucks={setTrucks} />}
+            {page === "expenses" && <TruckExpenses trucks={trucks} expenses={expenses} setExpenses={setExpenses} />}
             {page === "profit" && <TripTable trips={trips} trucks={trucks} clearTrips={clearTrips} />}
             {page === "reports" && <Reports trips={trips} clearTrips={clearTrips} />}
             {page === "driverreports" && <DriverReports trips={trips} />}
