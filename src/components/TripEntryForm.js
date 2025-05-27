@@ -73,18 +73,67 @@ export default function TripEntryForm({ trucks, addTrip, trips = [] }) {
       : 1;
   const perDayProfit = tripDays > 0 && totalProfit !== "" ? totalProfit / tripDays : 0;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    addTrip({
-      ...form,
-      id: Date.now(),
-      totalFreight,
-      totalKm,
-      totalExpenses,
-      totalProfit,
-      perDayProfit,
-    });
-    setForm({ ...initialForm, tripNumber: getNextTripNumber([...trips, { ...form, tripNumber: form.tripNumber }]) });
+    try {
+      // Prepare the trip data
+      const tripData = {
+        tripNumber: form.tripNumber,
+        truckNumber: form.truckNumber,
+        startDate: form.startDate,
+        endDate: form.endDate,
+        driverName: form.driverName,
+        from: form.from,
+        to: form.to,
+        partyName: form.partyName,
+        compressor: form.compressor,
+        startKm: parseInt(form.startKm) || 0,
+        endKm: parseInt(form.endKm) || 0,
+        totalKm: totalKm,
+        dieselQty: parseFloat(form.dieselQty) || 0,
+        dieselAmount: parseFloat(form.dieselAmount) || 0,
+        toll: parseFloat(form.toll) || 0,
+        driverSalary: parseFloat(form.driverSalary) || 0,
+        advancedSalary: parseFloat(form.advancedSalary) || 0,
+        maintenance: parseFloat(form.maintenance) || 0,
+        freight: parseFloat(form.freight) || 0,
+        weight: parseFloat(form.weight) || 0,
+        totalFreight: totalFreight,
+        totalExpenses: totalExpenses,
+        totalProfit: totalProfit,
+        perDayProfit: perDayProfit
+      };
+
+      // Send data to backend API
+      const response = await fetch('http://localhost:5000/api/trips', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(tripData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save trip');
+      }
+
+      // If successful, add to local state and reset form
+      addTrip({
+        ...tripData,
+        id: Date.now()
+      });
+
+      // Reset form
+      setForm({ ...initialForm, tripNumber: getNextTripNumber([...trips, { ...form, tripNumber: form.tripNumber }]) });
+
+      // Show success message
+      alert('Trip saved successfully!');
+
+    } catch (error) {
+      console.error('Error saving trip:', error);
+      alert('Error saving trip: ' + error.message);
+    }
   };
 
   return (
@@ -92,20 +141,22 @@ export default function TripEntryForm({ trucks, addTrip, trips = [] }) {
       <h2>Trip Entry</h2>
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6} md={4}>
-          <Select
-            name="truckNumber"
-            value={form.truckNumber}
-            onChange={handleChange}
-            displayEmpty
-            fullWidth
-          >
-            <MenuItem value="">Select Truck</MenuItem>
-            {trucks.map((t) => (
-              <MenuItem key={t.id} value={t.truckNumber}>
-                {t.truckNumber}
-              </MenuItem>
-            ))}
-          </Select>
+          <FormControl fullWidth>
+            <InputLabel>Select Truck</InputLabel>
+            <Select
+              name="truckNumber"
+              value={form.truckNumber}
+              onChange={handleChange}
+              label="Select Truck"
+            >
+              <MenuItem value="">Select Truck</MenuItem>
+              {Array.isArray(trucks) && trucks.map((truck) => (
+                <MenuItem key={truck.id} value={truck.truckNumber}>
+                  {truck.truckNumber} {truck.loadCapacity ? `(${truck.loadCapacity} Ton)` : ''}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </Grid>
         <Grid item xs={12} sm={6} md={4}>
           <TextField label="Trip Number" name="tripNumber" value={form.tripNumber} InputProps={{ readOnly: true }} fullWidth />

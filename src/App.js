@@ -15,8 +15,7 @@ import {
   Container,
   Paper,
   Box,
-  useMediaQuery,
-  IconButton
+  useMediaQuery
 } from "@mui/material";
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import AssignmentIcon from '@mui/icons-material/Assignment';
@@ -24,8 +23,8 @@ import TableChartIcon from '@mui/icons-material/TableChart';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import PersonIcon from '@mui/icons-material/Person';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
 
-const TRUCKS_KEY = "trucks_data";
 const TRIPS_KEY = "trips_data";
 
 const theme = createTheme({
@@ -34,7 +33,10 @@ const theme = createTheme({
       main: '#1976d2',
     },
     secondary: {
-      main: '#1565c0',
+      main: '#dc004e',
+    },
+    background: {
+      default: '#f5f5f5',
     },
   },
 });
@@ -49,21 +51,35 @@ const NAV = [
 ];
 
 function App() {
-  // Load from localStorage or fallback to test data
-  const [trucks, setTrucks] = useState(() => {
-    const stored = localStorage.getItem(TRUCKS_KEY);
-    return stored ? JSON.parse(stored) : testTrucks;
-  });
+  const [trucks, setTrucks] = useState([]);
   const [trips, setTrips] = useState(() => {
     const stored = localStorage.getItem(TRIPS_KEY);
     return stored ? JSON.parse(stored) : testTrips;
   });
   const [page, setPage] = useState("entry");
 
-  // Save to localStorage on change
+  // Fetch trucks from backend
   useEffect(() => {
-    localStorage.setItem(TRUCKS_KEY, JSON.stringify(trucks));
-  }, [trucks]);
+    const fetchTrucks = async () => {
+      console.log('Fetching trucks from backend...');
+      try {
+        const response = await fetch('http://localhost:5000/api/trucks');
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+          throw new Error('Failed to fetch trucks');
+        }
+        const data = await response.json();
+        console.log('Fetched trucks data:', data);
+        setTrucks(data);
+      } catch (error) {
+        console.error('Error fetching trucks:', error);
+        setTrucks([]);
+      }
+    };
+
+    fetchTrucks();
+  }, []);
+
   useEffect(() => {
     localStorage.setItem(TRIPS_KEY, JSON.stringify(trips));
   }, [trips]);
@@ -80,6 +96,7 @@ function App() {
 
   return (
     <ThemeProvider theme={theme}>
+      <CssBaseline />
       <AppBar position="static" color="primary" elevation={2}>
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700, letterSpacing: 1 }}>
