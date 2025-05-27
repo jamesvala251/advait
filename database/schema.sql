@@ -6,6 +6,7 @@ USE truck_management;
 CREATE TABLE IF NOT EXISTS trucks (
     id INT AUTO_INCREMENT PRIMARY KEY,
     truckNumber VARCHAR(50) NOT NULL UNIQUE,
+    loadCapacity DECIMAL(10,2),
     status ENUM('Active', 'Inactive') DEFAULT 'Active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
