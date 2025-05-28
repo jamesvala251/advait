@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { TextField, Button, MenuItem, Select, Autocomplete, Grid, InputLabel, FormControl } from "@mui/material";
 
 const gujaratCities = [
@@ -7,17 +7,8 @@ const gujaratCities = [
   // ...add more as needed
 ];
 
-function getNextTripNumber(trips) {
-  if (!trips || trips.length === 0) return 1;
-  const nums = trips
-    .map(t => parseInt(t.tripNumber, 10))
-    .filter(n => !isNaN(n));
-  return nums.length > 0 ? Math.max(...nums) + 1 : 1;
-}
-
 const initialForm = {
   truckNumber: "",
-  tripNumber: 1,
   startDate: "",
   endDate: "",
   from: "",
@@ -38,13 +29,8 @@ const initialForm = {
   // totalFreight and totalKm will be calculated
 };
 
-export default function TripEntryForm({ trucks, addTrip, trips = [] }) {
-  const [form, setForm] = useState({ ...initialForm, tripNumber: getNextTripNumber(trips) });
-
-  useEffect(() => {
-    setForm(f => ({ ...f, tripNumber: getNextTripNumber(trips) }));
-    // eslint-disable-next-line
-  }, [trips]);
+export default function TripEntryForm({ trucks, addTrip }) {
+  const [form, setForm] = useState(initialForm);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -84,7 +70,7 @@ export default function TripEntryForm({ trucks, addTrip, trips = [] }) {
       totalProfit,
       perDayProfit,
     });
-    setForm({ ...initialForm, tripNumber: getNextTripNumber([...trips, { ...form, tripNumber: form.tripNumber }]) });
+    setForm(initialForm);
   };
 
   return (
@@ -92,23 +78,22 @@ export default function TripEntryForm({ trucks, addTrip, trips = [] }) {
       <h2>Trip Entry</h2>
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6} md={4}>
-          <Select
-            name="truckNumber"
-            value={form.truckNumber}
-            onChange={handleChange}
-            displayEmpty
-            fullWidth
-          >
-            <MenuItem value="">Select Truck</MenuItem>
-            {trucks.map((t) => (
-              <MenuItem key={t.id} value={t.truckNumber}>
-                {t.truckNumber}
-              </MenuItem>
-            ))}
-          </Select>
-        </Grid>
-        <Grid item xs={12} sm={6} md={4}>
-          <TextField label="Trip Number" name="tripNumber" value={form.tripNumber} InputProps={{ readOnly: true }} fullWidth />
+          <FormControl fullWidth>
+            <InputLabel>Truck Number</InputLabel>
+            <Select
+              name="truckNumber"
+              value={form.truckNumber}
+              onChange={handleChange}
+              label="Truck Number"
+            >
+              <MenuItem value="">Select Truck</MenuItem>
+              {trucks.map((t) => (
+                <MenuItem key={t.id} value={t.truck_number}>
+                  {t.truck_number} ({t.model} - {t.capacity} Ton)
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </Grid>
         <Grid item xs={12} sm={6} md={4}>
           <TextField label="Driver Name" name="driverName" value={form.driverName} onChange={handleChange} fullWidth />
@@ -192,7 +177,8 @@ export default function TripEntryForm({ trucks, addTrip, trips = [] }) {
           <TextField label="Total Freight" name="totalFreight" type="number" value={totalFreight} InputProps={{ readOnly: true }} fullWidth />
         </Grid>
       </Grid>
-      <div style={{ marginTop: 24, marginBottom: 8 }}>
+      
+      <div style={{ marginTop: 16, marginBottom: 16 }}>
         <b>Total KM:</b> {totalKm} &nbsp;
         <b>Total Expenses:</b> {totalExpenses} &nbsp;
         <b>Total Profit:</b> {totalProfit} &nbsp;

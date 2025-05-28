@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { truckService, tripService, expenseService } from "./services/api";
 import { trucks as testTrucks, trips as testTrips } from "./data/testData";
 import TruckManager from "./components/TruckManager";
 import TripEntryForm from "./components/TripEntryForm";
@@ -7,6 +8,7 @@ import Reports from "./components/Reports";
 import AllTrips from "./components/AllTrips";
 import DriverReports from "./components/DriverReports";
 import TruckExpenses from "./components/TruckExpenses";
+import ProfitLoss from "./components/ProfitLoss";
 import {
   AppBar,
   Toolbar,
@@ -17,7 +19,9 @@ import {
   Paper,
   Box,
   useMediaQuery,
-  IconButton
+  IconButton,
+  Alert,
+  CircularProgress
 } from "@mui/material";
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import AssignmentIcon from '@mui/icons-material/Assignment';
@@ -53,37 +57,69 @@ const NAV = [
 ];
 
 function App() {
-  // Load from localStorage or fallback to test data
-  const [trucks, setTrucks] = useState(() => {
-    const stored = localStorage.getItem(TRUCKS_KEY);
-    return stored ? JSON.parse(stored) : testTrucks;
-  });
-  const [trips, setTrips] = useState(() => {
-    const stored = localStorage.getItem(TRIPS_KEY);
-    return stored ? JSON.parse(stored) : testTrips;
-  });
-  const [expenses, setExpenses] = useState(() => {
-    const stored = localStorage.getItem(EXPENSES_KEY);
-    return stored ? JSON.parse(stored) : [];
-  });
+  const [trucks, setTrucks] = useState([]);
+  const [trips, setTrips] = useState([]);
+  const [expenses, setExpenses] = useState([]);
   const [page, setPage] = useState("entry");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Save to localStorage on change
-  useEffect(() => {
-    localStorage.setItem(TRUCKS_KEY, JSON.stringify(trucks));
-  }, [trucks]);
-  useEffect(() => {
-    localStorage.setItem(TRIPS_KEY, JSON.stringify(trips));
-  }, [trips]);
-  useEffect(() => {
-    localStorage.setItem(EXPENSES_KEY, JSON.stringify(expenses));
-  }, [expenses]);
+  // Function to fetch all data
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [trucksResponse, tripsResponse, expensesResponse] = await Promise.all([
+        truckService.getAll(),
+        tripService.getAll(),
+        expenseService.getAll()
+      ]);
+      
+      setTrucks(trucksResponse.data);
+      setTrips(tripsResponse.data);
+      setExpenses(expensesResponse.data);
+      setError(null);
+    } catch (err) {
+      setError('Failed to fetch data. Please try again later.');
+      console.error('Error fetching data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const addTrip = (trip) => setTrips([...trips, trip]);
+  // Load data from API on component mount
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  const clearTrips = () => {
-    setTrips([]);
-    localStorage.setItem(TRIPS_KEY, JSON.stringify([]));
+  // Function to handle truck updates
+  const handleTruckUpdate = async () => {
+    try {
+      const response = await truckService.getAll();
+      setTrucks(response.data);
+    } catch (err) {
+      setError('Failed to update trucks. Please try again.');
+      console.error('Error updating trucks:', err);
+    }
+  };
+
+  const addTrip = async (trip) => {
+    try {
+      const response = await tripService.create(trip);
+      setTrips([...trips, response.data]);
+    } catch (err) {
+      setError('Failed to add trip. Please try again.');
+      console.error('Error adding trip:', err);
+    }
+  };
+
+  const clearTrips = async () => {
+    try {
+      await Promise.all(trips.map(trip => tripService.delete(trip.id)));
+      setTrips([]);
+    } catch (err) {
+      setError('Failed to clear trips. Please try again.');
+      console.error('Error clearing trips:', err);
+    }
   };
 
   // Responsive tab orientation
@@ -119,17 +155,28 @@ function App() {
         </Toolbar>
       </AppBar>
       <Container maxWidth={false} sx={{ mt: 4, mb: 4, px: { xs: 0, sm: 2 } }}>
-        <Paper elevation={3} sx={{ p: { xs: 1, sm: 3 }, mt: 4, maxWidth: '100%', overflowX: 'auto' }}>
-          <Box>
-            {page === "entry" && <TripEntryForm trucks={trucks} addTrip={addTrip} trips={trips} />}
-            {page === "alltrips" && <AllTrips trips={trips} trucks={trucks} />}
-            {page === "trucks" && <TruckManager trucks={trucks} setTrucks={setTrucks} />}
-            {page === "expenses" && <TruckExpenses trucks={trucks} expenses={expenses} setExpenses={setExpenses} />}
-            {page === "profit" && <TripTable trips={trips} trucks={trucks} clearTrips={clearTrips} />}
-            {page === "reports" && <Reports trips={trips} clearTrips={clearTrips} />}
-            {page === "driverreports" && <DriverReports trips={trips} />}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            <CircularProgress />
           </Box>
-        </Paper>
+        ) : (
+          <Paper elevation={3} sx={{ p: { xs: 1, sm: 3 }, mt: 4, maxWidth: '100%', overflowX: 'auto' }}>
+            <Box>
+              {page === "entry" && <TripEntryForm trucks={trucks} addTrip={addTrip} trips={trips} />}
+              {page === "alltrips" && <AllTrips trips={trips} trucks={trucks} />}
+              {page === "trucks" && <TruckManager trucks={trucks} setTrucks={handleTruckUpdate} />}
+              {page === "expenses" && <TruckExpenses trucks={trucks} expenses={expenses} setExpenses={setExpenses} />}
+              {page === "profit" && <ProfitLoss />}
+              {page === "reports" && <Reports trips={trips} clearTrips={clearTrips} />}
+              {page === "driverreports" && <DriverReports trips={trips} />}
+            </Box>
+          </Paper>
+        )}
       </Container>
       <Box sx={{ textAlign: 'center', color: 'grey.600', pb: 2, fontSize: 13 }}>
         © {new Date().getFullYear()} Advait Road Movers. All rights reserved.

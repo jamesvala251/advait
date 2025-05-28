@@ -36,11 +36,67 @@ export default function AllTrips({ trips, trucks }) {
     "Trip Number", "Truck", "Driver Name", "Start Date", "End Date", "From", "To", "Party Name", "Compressor", "Start KM", "End KM", "Total KM", "Diesel Qty", "Diesel Amount", "Toll", "Driver Salary", "Advanced Salary", "Maintenance", "Freight", "Weight", "Total Freight", "Total Expenses", "Total Profit", "Per Day Profit"
   ];
 
+  const mapTripToExport = (t) => {
+    // Get diesel quantity from fuel_consumed field
+    const dieselQty = t.fuel_consumed || 0;
+    
+    return {
+      "Trip Number": t.trip_number || t.tripNumber,
+      "Truck": t.truck ? `${t.truck.truck_number} (${t.truck.model})` : '',
+      "Driver Name": t.driver ? t.driver.name : '',
+      "Start Date": t.start_date || t.startDate,
+      "End Date": t.end_date || t.endDate,
+      "From": t.origin || t.from_city || t.fromCity || t.from || '',
+      "To": t.destination || t.to_city || t.toCity || t.to || '',
+      "Party Name": t.party_name || t.partyName || '',
+      "Compressor": t.compressor || '',
+      "Start KM": t.start_km || t.startKm || 0,
+      "End KM": t.end_km || t.endKm || 0,
+      "Total KM": t.total_km || t.totalKm || 0,
+      "Diesel Qty": dieselQty,
+      "Diesel Amount": t.diesel_amount || t.dieselAmount || 0,
+      "Toll": t.toll || 0,
+      "Driver Salary": t.driver_salary || t.driverSalary || 0,
+      "Advanced Salary": t.advanced_salary || t.advancedSalary || 0,
+      "Maintenance": t.maintenance || 0,
+      "Freight": t.freight || 0,
+      "Weight": t.weight || 0,
+      "Total Freight": t.total_freight || t.totalFreight || 0,
+      "Total Expenses": t.total_expenses || t.totalExpenses || 0,
+      "Total Profit": t.total_profit || t.totalProfit || 0,
+      "Per Day Profit": t.per_day_profit || t.perDayProfit || 0
+    };
+  };
+
+  // Filter trips based on selected criteria
+  const filteredTrips = trips.filter(trip => {
+    const tripTruckNumber = trip.truck ? trip.truck.truck_number : '';
+    const tripStartDate = trip.start_date || trip.startDate;
+    const tripEndDate = trip.end_date || trip.endDate;
+    const tripFrom = trip.origin || trip.from_city || trip.fromCity || trip.from || '';
+    const tripTo = trip.destination || trip.to_city || trip.toCity || trip.to || '';
+    
+    // Extract just the truck number from the display string (e.g., "1234 (Model - 10 Ton)" -> "1234")
+    const selectedTruckNumber = filters.truckNumber ? filters.truckNumber.split(' ')[0] : '';
+    
+    const matchesTruck = !filters.truckNumber || tripTruckNumber === selectedTruckNumber;
+    const matchesStartDate = !filters.startDate || new Date(tripStartDate) >= new Date(filters.startDate);
+    const matchesEndDate = !filters.endDate || new Date(tripEndDate) <= new Date(filters.endDate);
+    const matchesLoadCapacity = !filters.loadCapacity || 
+      (trip.truck && trip.truck.capacity === filters.loadCapacity);
+    
+    return matchesTruck && matchesStartDate && matchesEndDate && matchesLoadCapacity;
+  });
+
   // Get unique truck numbers for the filter dropdown
-  const uniqueTruckNumbers = [...new Set(trips.map(trip => trip.truckNumber))];
+  const uniqueTruckNumbers = [...new Set(trips.map(trip => 
+    trip.truck ? `${trip.truck.truck_number} (${trip.truck.model} - ${trip.truck.capacity} Ton)` : ''
+  ).filter(Boolean))];
 
   // Get unique truck load capacities for the filter dropdown
-  const uniqueLoadCapacities = [...new Set(trucks.map(truck => truck.loadCapacity))];
+  const uniqueLoadCapacities = [...new Set(trips.map(trip => 
+    trip.truck ? trip.truck.capacity : null
+  ).filter(Boolean))];
 
   const handleFilterChange = (field) => (event) => {
     setFilters(prev => ({
@@ -49,49 +105,12 @@ export default function AllTrips({ trips, trucks }) {
     }));
   };
 
-  // Filter trips based on selected criteria
-  const filteredTrips = trips.filter(trip => {
-    const matchesTruck = !filters.truckNumber || trip.truckNumber === filters.truckNumber;
-    const matchesStartDate = !filters.startDate || trip.startDate >= filters.startDate;
-    const matchesEndDate = !filters.endDate || trip.endDate <= filters.endDate;
-    const matchesLoadCapacity = !filters.loadCapacity || 
-      trucks.find(truck => truck.truckNumber === trip.truckNumber)?.loadCapacity === filters.loadCapacity;
-    return matchesTruck && matchesStartDate && matchesEndDate && matchesLoadCapacity;
-  });
-
   const exportToExcel = (data, filename = "all_trips.xlsx") => {
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "AllTrips");
     XLSX.writeFile(workbook, filename);
   };
-
-  const mapTripToExport = (t) => ({
-    "Trip Number": t.tripNumber,
-    "Truck": t.truckNumber,
-    "Driver Name": t.driverName,
-    "Start Date": t.startDate,
-    "End Date": t.endDate,
-    "From": t.from,
-    "To": t.to,
-    "Party Name": t.partyName,
-    "Compressor": t.compressor,
-    "Start KM": t.startKm,
-    "End KM": t.endKm,
-    "Total KM": t.totalKm,
-    "Diesel Qty": t.dieselQty,
-    "Diesel Amount": t.dieselAmount,
-    "Toll": t.toll,
-    "Driver Salary": t.driverSalary,
-    "Advanced Salary": t.advancedSalary,
-    "Maintenance": t.maintenance,
-    "Freight": t.freight,
-    "Weight": t.weight,
-    "Total Freight": t.totalFreight,
-    "Total Expenses": t.totalExpenses,
-    "Total Profit": t.totalProfit,
-    "Per Day Profit": t.perDayProfit !== undefined ? Number(t.perDayProfit).toFixed(2) : ""
-  });
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
@@ -179,46 +198,50 @@ export default function AllTrips({ trips, trucks }) {
               </tr>
             </thead>
             <tbody>
-              ${tripsToPrint.map(trip => `
+              ${tripsToPrint.map(trip => {
+                const exportObj = mapTripToExport(trip);
+                return `
                 <tr>
-                  <td>${trip.tripNumber || ''}</td>
-                  <td>${trip.truckNumber || ''}</td>
-                  <td>${trip.driverName || ''}</td>
-                  <td>${trip.startDate || ''}</td>
-                  <td>${trip.endDate || ''}</td>
-                  <td>${trip.from || ''}</td>
-                  <td>${trip.to || ''}</td>
-                  <td>${trip.partyName || ''}</td>
-                  <td>${trip.compressor || ''}</td>
-                  <td>${trip.startKm || ''}</td>
-                  <td>${trip.endKm || ''}</td>
-                  <td>${trip.totalKm || ''}</td>
-                  <td>${trip.dieselQty || ''}</td>
-                  <td>₹${Number(trip.dieselAmount || 0).toFixed(2)}</td>
-                  <td>₹${Number(trip.toll || 0).toFixed(2)}</td>
-                  <td>₹${Number(trip.driverSalary || 0).toFixed(2)}</td>
-                  <td>₹${Number(trip.advancedSalary || 0).toFixed(2)}</td>
-                  <td>₹${Number(trip.maintenance || 0).toFixed(2)}</td>
-                  <td>₹${Number(trip.freight || 0).toFixed(2)}</td>
-                  <td>${trip.weight || ''}</td>
-                  <td>₹${Number(trip.totalFreight || 0).toFixed(2)}</td>
-                  <td>₹${Number(trip.totalExpenses || 0).toFixed(2)}</td>
-                  <td>₹${Number(trip.totalProfit || 0).toFixed(2)}</td>
-                  <td>₹${Number(trip.perDayProfit || 0).toFixed(2)}</td>
+                  <td>${exportObj["Trip Number"] || ''}</td>
+                  <td>${exportObj["Truck"] || ''}</td>
+                  <td>${exportObj["Driver Name"] || ''}</td>
+                  <td>${exportObj["Start Date"] ? new Date(exportObj["Start Date"]).toLocaleDateString() : ''}</td>
+                  <td>${exportObj["End Date"] ? new Date(exportObj["End Date"]).toLocaleDateString() : ''}</td>
+                  <td>${exportObj["From"] || ''}</td>
+                  <td>${exportObj["To"] || ''}</td>
+                  <td>${exportObj["Party Name"] || ''}</td>
+                  <td>${exportObj["Compressor"] || ''}</td>
+                  <td>${exportObj["Start KM"] || 0}</td>
+                  <td>${exportObj["End KM"] || 0}</td>
+                  <td>${exportObj["Total KM"] || 0}</td>
+                  <td>${Number(trip.fuel_consumed || 0).toFixed(2)}</td>
+                  <td>₹${Number(exportObj["Diesel Amount"] || 0).toFixed(2)}</td>
+                  <td>₹${Number(exportObj["Toll"] || 0).toFixed(2)}</td>
+                  <td>₹${Number(exportObj["Driver Salary"] || 0).toFixed(2)}</td>
+                  <td>₹${Number(exportObj["Advanced Salary"] || 0).toFixed(2)}</td>
+                  <td>₹${Number(exportObj["Maintenance"] || 0).toFixed(2)}</td>
+                  <td>₹${Number(exportObj["Freight"] || 0).toFixed(2)}</td>
+                  <td>${exportObj["Weight"] || 0}</td>
+                  <td>₹${Number(exportObj["Total Freight"] || 0).toFixed(2)}</td>
+                  <td>₹${Number(exportObj["Total Expenses"] || 0).toFixed(2)}</td>
+                  <td>₹${Number(exportObj["Total Profit"] || 0).toFixed(2)}</td>
+                  <td>₹${Number(exportObj["Per Day Profit"] || 0).toFixed(2)}</td>
                 </tr>
-              `).join('')}
+              `}).join('')}
               <tr class="total-row">
-                <td colspan="14">Total</td>
+                <td colspan="12">Total</td>
+                <td>${tripsToPrint.reduce((sum, t) => sum + Number(t.fuel_consumed || 0), 0).toFixed(2)}</td>
+                <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.diesel_amount || t.dieselAmount || 0), 0).toFixed(2)}</td>
                 <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.toll || 0), 0).toFixed(2)}</td>
-                <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.driverSalary || 0), 0).toFixed(2)}</td>
-                <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.advancedSalary || 0), 0).toFixed(2)}</td>
+                <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.driver_salary || t.driverSalary || 0), 0).toFixed(2)}</td>
+                <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.advanced_salary || t.advancedSalary || 0), 0).toFixed(2)}</td>
                 <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.maintenance || 0), 0).toFixed(2)}</td>
                 <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.freight || 0), 0).toFixed(2)}</td>
                 <td></td>
-                <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.totalFreight || 0), 0).toFixed(2)}</td>
-                <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.totalExpenses || 0), 0).toFixed(2)}</td>
-                <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.totalProfit || 0), 0).toFixed(2)}</td>
-                <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.perDayProfit || 0), 0).toFixed(2)}</td>
+                <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.total_freight || t.totalFreight || 0), 0).toFixed(2)}</td>
+                <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.total_expenses || t.totalExpenses || 0), 0).toFixed(2)}</td>
+                <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.total_profit || t.totalProfit || 0), 0).toFixed(2)}</td>
+                <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.per_day_profit || t.perDayProfit || 0), 0).toFixed(2)}</td>
               </tr>
             </tbody>
           </table>
@@ -246,7 +269,7 @@ export default function AllTrips({ trips, trucks }) {
             >
               <MenuItem value="">All Trucks</MenuItem>
               {uniqueTruckNumbers.map(truckNumber => (
-                <MenuItem key={truckNumber} value={truckNumber}>
+                <MenuItem key={`truck-${truckNumber}`} value={truckNumber}>
                   {truckNumber}
                 </MenuItem>
               ))}
@@ -263,7 +286,7 @@ export default function AllTrips({ trips, trucks }) {
             >
               <MenuItem value="">All Capacities</MenuItem>
               {uniqueLoadCapacities.map(capacity => (
-                <MenuItem key={capacity} value={capacity}>
+                <MenuItem key={`capacity-${capacity}`} value={capacity}>
                   {capacity} Ton
                 </MenuItem>
               ))}
@@ -345,10 +368,27 @@ export default function AllTrips({ trips, trucks }) {
                     onChange={() => handleSelectTrip(t.id)}
                   />
                 </TableCell>
-                {columns.map(col => <TableCell key={col}>{exportObj[col]}</TableCell>)}
+                {columns.map(col => {
+                  let value = exportObj[col];
+                  // Format currency values
+                  if (col.includes('Amount') || col.includes('Salary') || col.includes('Toll') || 
+                      col.includes('Freight') || col.includes('Expenses') || col.includes('Profit')) {
+                    value = `₹${Number(value || 0).toFixed(2)}`;
+                  }
+                  // Format dates
+                  if (col.includes('Date') && value) {
+                    value = new Date(value).toLocaleDateString();
+                  }
+                  // Format numeric values without currency symbol
+                  if (col === 'Diesel Qty' || col === 'Start KM' || col === 'End KM' || 
+                      col === 'Total KM' || col === 'Weight') {
+                    value = Number(value || 0).toFixed(2);
+                  }
+                  return <TableCell key={`${t.id}-${col}`}>{value}</TableCell>;
+                })}
                 <TableCell>
                   <Tooltip title="Export Excel">
-                    <IconButton size="small" onClick={() => exportToExcel([exportObj], `trip_${t.tripNumber}.xlsx`)}>
+                    <IconButton size="small" onClick={() => exportToExcel([exportObj], `trip_${t.trip_number || t.tripNumber}.xlsx`)}>
                       <FileDownloadIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
