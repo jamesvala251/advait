@@ -103,10 +103,10 @@ export default function DriverReports() {
               <MenuItem value="" key="all-drivers">All Drivers</MenuItem>
               {[
                 ...new Map(
-                  drivers.map(driver => [driver.id, driver])
+                  drivers.map(driver => [driver.name.trim().toLowerCase(), driver])
                 ).values()
               ].map((driver) => (
-                <MenuItem key={`driver-${driver.id}`} value={driver.id}>
+                <MenuItem key={`driver-${driver.name}`} value={driver.id}>
                   {driver.name}
                 </MenuItem>
               ))}
