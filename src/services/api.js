@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-// const API_URL = 'http://localhost/advait/advait-backend/public/api';
+const API_URL = "http://56.228.54.15/api"; // or your domain/api
 const BASE_URL = 'http://56.228.54.15/api';
 
 const api = axios.create({
