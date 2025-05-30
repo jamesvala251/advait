@@ -96,17 +96,19 @@ export default function DriverReports() {
           <FormControl fullWidth>
             <InputLabel>Driver</InputLabel>
             <Select
-              value={filters.driver_id || ""}
-              onChange={handleFilterChange('driver_id')}
+              value={filters.driver_name || ""}
+              onChange={handleFilterChange('driver_name')}
               label="Driver"
             >
               <MenuItem value="" key="all-drivers">All Drivers</MenuItem>
-              {[
-                ...new Map(
-                  drivers.map(driver => [driver.name.trim().toLowerCase(), driver])
-                ).values()
-              ].map((driver) => (
-                <MenuItem key={`driver-${driver.name}`} value={driver.id}>
+              {Array.from(
+                drivers.reduce((map, driver) => {
+                  const key = driver.name.trim().toLowerCase();
+                  if (!map.has(key)) map.set(key, driver);
+                  return map;
+                }, new Map()).values()
+              ).map((driver) => (
+                <MenuItem key={`driver-${driver.name}`} value={driver.name}>
                   {driver.name}
                 </MenuItem>
               ))}
