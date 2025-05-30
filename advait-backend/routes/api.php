@@ -65,8 +65,8 @@ Route::delete('/truck-expenses/{id}', [TruckExpenseController::class, 'destroy']
 Route::get('/truck-expenses/trucks', [TruckExpenseController::class, 'getTrucks']);
 
 // Reports
-Route::get('/reports/profit-loss', [ReportController::class, 'profitLoss']);
-Route::get('/reports/driver', [ReportController::class, 'driver']);
-Route::get('/reports/truck', [ReportController::class, 'truck']);
-Route::get('/reports/driver-details', [DriverReportController::class, 'index']);
+// Route::get('/reports/profit-loss', [ReportController::class, 'profitLoss']);
+// Route::get('/reports/driver', [ReportController::class, 'driver']);
+// Route::get('/reports/truck', [ReportController::class, 'truck']);
+// Route::get('/reports/driver-details', [DriverReportController::class, 'index']);
 Route::get('/reports/trip-profit-loss', [TripProfitLossController::class, 'index']);
