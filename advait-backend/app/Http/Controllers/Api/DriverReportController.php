@@ -36,6 +36,8 @@ class DriverReportController extends Controller
             // Apply filters if provided
             if ($request->has('driver_id')) {
                 $query->where('drivers.id', $request->driver_id);
+            } elseif ($request->has('driver_name')) {
+                $query->where('drivers.name', $request->driver_name);
             }
 
             if ($request->has('start_date')) {
