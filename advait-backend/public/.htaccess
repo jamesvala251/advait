@@ -20,9 +20,3 @@
     RewriteRule ^ index.php [L]
 </IfModule>
 
-Alias /api /var/www/html/advait-backend/public
-<Directory /var/www/html/advait-backend/public>
-    Options Indexes FollowSymLinks
-    AllowOverride All
-    Require all granted
-</Directory>
