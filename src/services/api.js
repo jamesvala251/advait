@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost/advait-backend/public/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://56.228.54.15/api';
 
 
 const api = axios.create({
