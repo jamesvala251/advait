@@ -9,6 +9,7 @@ import AllTrips from "./components/AllTrips";
 import DriverReports from "./components/DriverReports";
 import TruckExpenses from "./components/TruckExpenses";
 import ProfitLoss from "./components/ProfitLoss";
+import Login from "./components/Login";
 import {
   AppBar,
   Toolbar,
@@ -52,7 +53,7 @@ const NAV = [
   { label: "Truck Management", icon: <DirectionsCarIcon />, value: "trucks" },
   { label: "Truck Expenses", icon: <ReceiptIcon />, value: "expenses" },
   { label: "Profit/Loss", icon: <TableChartIcon />, value: "profit" },
-  { label: "Reports", icon: <BarChartIcon />, value: "reports" },
+  // { label: "Reports", icon: <BarChartIcon />, value: "reports" }, // Reports (Summary) commented out
   { label: "Driver Reports", icon: <PersonIcon />, value: "driverreports" },
 ];
 
@@ -63,6 +64,7 @@ function App() {
   const [page, setPage] = useState("entry");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem('isLoggedIn') === 'true');
 
   // Function to fetch all data
   const fetchData = async () => {
@@ -125,6 +127,12 @@ function App() {
   // Responsive tab orientation
   const isMobile = useMediaQuery('(max-width:600px)');
 
+  const handleLogin = () => setIsLoggedIn(true);
+
+  if (!isLoggedIn) {
+    return <Login onLogin={handleLogin} />;
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <AppBar position="static" color="primary" elevation={2}>
@@ -172,7 +180,7 @@ function App() {
               {page === "trucks" && <TruckManager trucks={trucks} setTrucks={handleTruckUpdate} />}
               {page === "expenses" && <TruckExpenses trucks={trucks} expenses={expenses} setExpenses={setExpenses} />}
               {page === "profit" && <ProfitLoss />}
-              {page === "reports" && <Reports trips={trips} clearTrips={clearTrips} />}
+              {/* {page === "reports" && <Reports trips={trips} clearTrips={clearTrips} />} */}
               {page === "driverreports" && <DriverReports trips={trips} />}
             </Box>
           </Paper>
