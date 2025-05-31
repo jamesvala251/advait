@@ -6,7 +6,7 @@ return [
 'allowed_origins' => [
     'http://localhost:3000',
     'http://localhost',
-    'http://56.228.54.15:8000'
+    'http://56.228.54.15'
 ],
 'allowed_headers' => ['*'],
 'exposed_headers' => [],
