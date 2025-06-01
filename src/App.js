@@ -22,7 +22,8 @@ import {
   useMediaQuery,
   IconButton,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Button
 } from "@mui/material";
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import AssignmentIcon from '@mui/icons-material/Assignment';
@@ -31,6 +32,13 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 import PersonIcon from '@mui/icons-material/Person';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import Drawer from '@mui/material/Drawer';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import MenuIcon from '@mui/icons-material/Menu';
 
 const TRUCKS_KEY = "trucks_data";
 const TRIPS_KEY = "trips_data";
@@ -65,6 +73,8 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem('isLoggedIn') === 'true');
+  const isMobile = useMediaQuery('(max-width:600px)');
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Function to fetch all data
   const fetchData = async () => {
@@ -124,9 +134,6 @@ function App() {
     }
   };
 
-  // Responsive tab orientation
-  const isMobile = useMediaQuery('(max-width:600px)');
-
   const handleLogin = () => setIsLoggedIn(true);
 
   if (!isLoggedIn) {
@@ -140,26 +147,73 @@ function App() {
           <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700, letterSpacing: 1 }}>
             Advait Road Movers
           </Typography>
-          <Tabs
-            value={page}
-            onChange={(_, v) => setPage(v)}
-            textColor="inherit"
-            indicatorColor="secondary"
-            orientation={isMobile ? "vertical" : "horizontal"}
-            variant={isMobile ? "scrollable" : "standard"}
-            sx={{ minHeight: 48 }}
-          >
-            {NAV.map((nav) => (
-              <Tab
-                key={nav.value}
-                icon={nav.icon}
-                iconPosition="start"
-                label={nav.label}
-                value={nav.value}
-                sx={{ minHeight: 48, fontWeight: page === nav.value ? 700 : 400 }}
-              />
-            ))}
-          </Tabs>
+          {isMobile ? (
+            <>
+              <IconButton
+                color="inherit"
+                edge="end"
+                onClick={() => setDrawerOpen(true)}
+                sx={{ ml: 1 }}
+              >
+                <MenuIcon />
+              </IconButton>
+              <Drawer
+                anchor="right"
+                open={drawerOpen}
+                onClose={() => setDrawerOpen(false)}
+              >
+                <Box sx={{ width: 250 }} role="presentation" onClick={() => setDrawerOpen(false)}>
+                  <List>
+                    {NAV.map((nav) => (
+                      <ListItem key={nav.value} disablePadding>
+                        <ListItemButton selected={page === nav.value} onClick={() => setPage(nav.value)}>
+                          <ListItemIcon>{nav.icon}</ListItemIcon>
+                          <ListItemText primary={nav.label} />
+                        </ListItemButton>
+                      </ListItem>
+                    ))}
+                    <ListItem disablePadding>
+                      <ListItemButton onClick={() => {
+                        localStorage.removeItem('isLoggedIn');
+                        window.location.reload();
+                      }}>
+                        <ListItemText primary="Logout" />
+                      </ListItemButton>
+                    </ListItem>
+                  </List>
+                </Box>
+              </Drawer>
+            </>
+          ) : (
+            <>
+              <Tabs
+                value={page}
+                onChange={(_, v) => setPage(v)}
+                textColor="inherit"
+                indicatorColor="secondary"
+                orientation="horizontal"
+                variant="standard"
+                sx={{ minHeight: 48 }}
+              >
+                {NAV.map((nav) => (
+                  <Tab
+                    key={nav.value}
+                    icon={nav.icon}
+                    iconPosition="start"
+                    label={nav.label}
+                    value={nav.value}
+                    sx={{ minHeight: 48, fontWeight: page === nav.value ? 700 : 400 }}
+                  />
+                ))}
+              </Tabs>
+              <Button color="inherit" onClick={() => {
+                localStorage.removeItem('isLoggedIn');
+                window.location.reload();
+              }}>
+                Logout
+              </Button>
+            </>
+          )}
         </Toolbar>
       </AppBar>
       <Container maxWidth={false} sx={{ mt: 4, mb: 4, px: { xs: 0, sm: 2 } }}>

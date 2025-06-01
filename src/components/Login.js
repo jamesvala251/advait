@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { Box, Button, TextField, Typography, Paper, Alert } from '@mui/material';
 
 const PREDEFINED_USERNAME = 'admin';
-const PREDEFINED_PASSWORD = 'admin123';
+const PREDEFINED_PASSWORD = 'admin@321';
 
 export default function Login({ onLogin }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem('isLoggedIn') === 'true');
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -23,6 +24,7 @@ export default function Login({ onLogin }) {
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5' }}>
       <Paper elevation={4} sx={{ p: 4, minWidth: 320 }}>
+        <img src="/logo.jpg" alt="Logo" style={{ display: 'block', margin: '0 auto 24px', maxWidth: 120 }} />
         <Typography variant="h5" gutterBottom align="center">Login</Typography>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         <form onSubmit={handleSubmit}>
