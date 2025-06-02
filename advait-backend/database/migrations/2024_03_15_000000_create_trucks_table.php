@@ -15,10 +15,6 @@ return new class extends Migration
     {
         Schema::create('trucks', function (Blueprint $table) {
             $table->id();
-            $table->string('truck_number');
-            $table->string('model')->default('Default');
-            $table->integer('capacity');
-            $table->string('status');
             $table->timestamps();
         });
     }
