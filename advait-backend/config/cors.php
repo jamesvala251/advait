@@ -5,7 +5,7 @@ return [
 'allowed_methods' => ['*'],
 'allowed_origins' => [
     'http://localhost:3000',
-    'http://localhost',
+    'http://advaitroadmovers.com',
     'http://56.228.54.15'
 ],
 'allowed_headers' => ['*'],

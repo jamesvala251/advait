@@ -13,6 +13,7 @@ class Driver extends Model
         'name',
         'phone',
         'license_number',
+        'address',
         'status'
     ];
 
