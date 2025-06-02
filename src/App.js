@@ -108,7 +108,7 @@ function App() {
   const handleTruckUpdate = async () => {
     try {
       const response = await truckService.getAll();
-      setTrucks(response.data);
+      setTrucks(response.data?.data || []);
     } catch (err) {
       setError('Failed to update trucks. Please try again.');
       console.error('Error updating trucks:', err);
