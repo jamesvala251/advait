@@ -16,7 +16,7 @@ class TruckController extends Controller
      */
     public function index()
     {
-        $trucks = Truck::all();
+        $trucks = Truck::with('trips')->get();
         return response()->json($trucks);
     }
 
@@ -62,7 +62,8 @@ class TruckController extends Controller
      */
     public function show($id)
     {
-        //
+        $truck = Truck::with('trips')->findOrFail($id);
+        return response()->json($truck);
     }
 
     /**
@@ -74,7 +75,25 @@ class TruckController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $truck = Truck::findOrFail($id);
+
+        $validated = $request->validate([
+            'truck_number' => 'required|string|unique:trucks,truck_number,' . $id,
+            'model' => 'required|string',
+            'capacity' => 'required|integer',
+            'status' => 'required|string'
+        ]);
+
+        try {
+            $truck->update($validated);
+            return response()->json($truck);
+        } catch (\Exception $e) {
+            Log::error('Error updating truck: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error updating truck',
+                'error' => $e->getMessage()
+            ], 422);
+        }
     }
 
     /**
@@ -85,8 +104,48 @@ class TruckController extends Controller
      */
     public function destroy($id)
     {
-        $truck = Truck::findOrFail($id);
-        $truck->delete();
-        return response()->json(['message' => 'Truck deleted successfully']);
+        try {
+            $truck = Truck::findOrFail($id);
+            
+            // Check if truck has any active trips
+            $hasActiveTrips = $truck->trips()->where('status', 'active')->exists();
+            
+            if ($hasActiveTrips) {
+                return response()->json([
+                    'message' => 'Cannot delete truck with active trips',
+                    'error' => 'Truck has active trips associated with it'
+                ], 422);
+            }
+
+            $truck->delete();
+            return response()->json(['message' => 'Truck deleted successfully']);
+        } catch (\Exception $e) {
+            Log::error('Error deleting truck: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to delete truck',
+                'error' => $e->getMessage()
+            ], 422);
+        }
+    }
+
+    /**
+     * Restore a soft-deleted truck.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function restore($id)
+    {
+        try {
+            $truck = Truck::withTrashed()->findOrFail($id);
+            $truck->restore();
+            return response()->json(['message' => 'Truck restored successfully']);
+        } catch (\Exception $e) {
+            Log::error('Error restoring truck: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to restore truck',
+                'error' => $e->getMessage()
+            ], 422);
+        }
     }
 }

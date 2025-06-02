@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// const API_URL = '/api';
-const API_URL = 'http://localhost:8000/api';
+const API_URL = '/api';
+// const API_URL = 'http://localhost:8000/api';
 
 
 const api = axios.create({
@@ -31,7 +31,8 @@ export const truckService = {
     getAll: () => api.get('/trucks'),
     create: (data) => api.post('/trucks', data),
     update: (id, data) => api.put(`/trucks/${id}`, data),
-    delete: (id) => api.delete(`/trucks/${id}`)
+    delete: (id) => api.delete(`/trucks/${id}`),
+    restore: (id) => api.post(`/trucks/${id}/restore`)
 };
 
 export const tripService = {

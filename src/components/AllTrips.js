@@ -17,19 +17,40 @@ import {
   FormControl,
   InputLabel,
   Typography,
-  Box
+  Box,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from "@mui/material";
 import * as XLSX from "xlsx";
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import PrintIcon from '@mui/icons-material/Print';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { tripService } from '../services/api';
 
-export default function AllTrips({ trips, trucks }) {
+export default function AllTrips({ trips, trucks, onTripDelete }) {
   const [selectedTrips, setSelectedTrips] = useState([]);
   const [filters, setFilters] = useState({
     truckNumber: '',
     startDate: '',
     endDate: '',
     loadCapacity: ''
+  });
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [tripToDelete, setTripToDelete] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
+
+  // Debug logging
+  console.log('All Trips:', trips);
+  console.log('All Trucks:', trucks);
+  trips.forEach((trip, index) => {
+    console.log(`Trip ${index + 1}:`, {
+      trip_id: trip.id,
+      truck_id: trip.truck_id,
+      truck_data: trip.truck,
+      found_truck: trucks.find(t => t.id === trip.truck_id)
+    });
   });
 
   const columns = [
@@ -39,11 +60,17 @@ export default function AllTrips({ trips, trucks }) {
   const mapTripToExport = (t) => {
     // Get diesel quantity from fuel_consumed field
     const dieselQty = t.fuel_consumed || 0;
+    // Use the truck data from the trip's relationship
+    console.log('Mapping trip to export:', {
+      trip_id: t.id,
+      truck_id: t.truck_id,
+      truck_data: t.truck
+    });
     
     return {
       "Trip Number": t.trip_number || t.tripNumber,
-      "Truck": t.truck ? `${t.truck.truck_number} (${t.truck.model})` : '',
-      "Driver Name": t.driver ? t.driver.name : '',
+      "Truck": t.truck ? `${t.truck.truck_number} (${t.truck.model})` : 'No Truck',
+      "Driver Name": t.driver ? t.driver.name : 'No Driver',
       "Start Date": t.start_date || t.startDate,
       "End Date": t.end_date || t.endDate,
       "From": t.origin || t.from_city || t.fromCity || t.from || '',
@@ -253,10 +280,40 @@ export default function AllTrips({ trips, trucks }) {
     printWindow.document.close();
   };
 
+  const handleDeleteClick = (trip) => {
+    setTripToDelete(trip);
+    setDeleteDialogOpen(true);
+    setDeleteError(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await tripService.delete(tripToDelete.id);
+      onTripDelete(tripToDelete.id);
+      setDeleteDialogOpen(false);
+      setTripToDelete(null);
+    } catch (error) {
+      setDeleteError(error.response?.data?.message || 'Failed to delete trip');
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setTripToDelete(null);
+    setDeleteError(null);
+  };
+
   return (
     <Paper sx={{ p: 2 }}>
       <Typography variant="h5" gutterBottom>All Trips</Typography>
       
+      {/* Debug info */}
+      <Box sx={{ mb: 2, p: 1, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+        <Typography variant="body2" color="textSecondary">
+          Total Trips: {trips.length}
+        </Typography>
+      </Box>
+
       {/* Filters Section */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={3}>
@@ -354,12 +411,18 @@ export default function AllTrips({ trips, trucks }) {
               />
             </TableCell>
             {columns.map(col => <TableCell key={col}>{col}</TableCell>)}
-            <TableCell>Export</TableCell>
+            <TableCell>Actions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {filteredTrips.map((t) => {
             const exportObj = mapTripToExport(t);
+            console.log('Rendering trip row:', {
+              trip_id: t.id,
+              truck_id: t.truck_id,
+              truck_data: t.truck
+            });
+            
             return (
               <TableRow key={t.id}>
                 <TableCell padding="checkbox">
@@ -384,20 +447,56 @@ export default function AllTrips({ trips, trucks }) {
                       col === 'Total KM' || col === 'Weight') {
                     value = Number(value || 0).toFixed(2);
                   }
+                  // Special handling for truck display
+                  if (col === 'Truck') {
+                    value = t.truck ? `${t.truck.truck_number} (${t.truck.model})` : 'No Truck';
+                  }
+                  // Special handling for driver name
+                  if (col === 'Driver Name') {
+                    value = t.driver ? t.driver.name : 'No Driver';
+                  }
                   return <TableCell key={`${t.id}-${col}`}>{value}</TableCell>;
                 })}
                 <TableCell>
-                  <Tooltip title="Export Excel">
-                    <IconButton size="small" onClick={() => exportToExcel([exportObj], `trip_${t.trip_number || t.tripNumber}.xlsx`)}>
-                      <FileDownloadIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Tooltip title="Export Excel">
+                      <IconButton size="small" onClick={() => exportToExcel([exportObj], `trip_${t.trip_number || t.tripNumber}.xlsx`)}>
+                        <FileDownloadIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete Trip">
+                      <IconButton size="small" color="error" onClick={() => handleDeleteClick(t)}>
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
                 </TableCell>
               </TableRow>
             );
           })}
         </TableBody>
       </Table>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+        <DialogTitle>Delete Trip</DialogTitle>
+        <DialogContent>
+          {deleteError ? (
+            <Typography color="error">{deleteError}</Typography>
+          ) : (
+            <Typography>
+              Are you sure you want to delete trip {tripToDelete?.trip_number || tripToDelete?.tripNumber}?
+              This action cannot be undone.
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   );
 } 

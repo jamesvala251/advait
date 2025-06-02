@@ -35,6 +35,7 @@ Route::get('/trucks', [TruckController::class, 'index']);
 Route::post('/trucks', [TruckController::class, 'store']);
 Route::put('/trucks/{id}', [TruckController::class, 'update']);
 Route::delete('/trucks/{id}', [TruckController::class, 'destroy']);
+Route::post('/trucks/{id}/restore', [TruckController::class, 'restore']);
 
 // Trips
 Route::get('/trips', [TripController::class, 'index']);

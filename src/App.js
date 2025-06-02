@@ -136,6 +136,15 @@ function App() {
 
   const handleLogin = () => setIsLoggedIn(true);
 
+  const handleTripDelete = async (tripId) => {
+    try {
+      setTrips(trips.filter(trip => trip.id !== tripId));
+    } catch (err) {
+      setError('Failed to delete trip. Please try again.');
+      console.error('Error deleting trip:', err);
+    }
+  };
+
   if (!isLoggedIn) {
     return <Login onLogin={handleLogin} />;
   }
@@ -230,7 +239,7 @@ function App() {
           <Paper elevation={3} sx={{ p: { xs: 1, sm: 3 }, mt: 4, maxWidth: '100%', overflowX: 'auto' }}>
             <Box>
               {page === "entry" && <TripEntryForm trucks={trucks} addTrip={addTrip} trips={trips} />}
-              {page === "alltrips" && <AllTrips trips={trips} trucks={trucks} />}
+              {page === "alltrips" && <AllTrips trips={trips} trucks={trucks} onTripDelete={handleTripDelete} />}
               {page === "trucks" && <TruckManager trucks={trucks} setTrucks={handleTruckUpdate} />}
               {page === "expenses" && <TruckExpenses trucks={trucks} expenses={expenses} setExpenses={setExpenses} />}
               {page === "profit" && <ProfitLoss />}
