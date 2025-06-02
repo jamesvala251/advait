@@ -9,6 +9,7 @@ import AllTrips from "./components/AllTrips";
 import DriverReports from "./components/DriverReports";
 import TruckExpenses from "./components/TruckExpenses";
 import ProfitLoss from "./components/ProfitLoss";
+import LoadDetails from "./components/LoadDetails";
 import Login from "./components/Login";
 import {
   AppBar,
@@ -60,8 +61,8 @@ const NAV = [
   { label: "All Trips", icon: <TableChartIcon />, value: "alltrips" },
   { label: "Truck Management", icon: <DirectionsCarIcon />, value: "trucks" },
   { label: "Truck Expenses", icon: <ReceiptIcon />, value: "expenses" },
+  { label: "Market Trucks", icon: <AssignmentIcon />, value: "loads" },
   { label: "Profit/Loss", icon: <TableChartIcon />, value: "profit" },
-  // { label: "Reports", icon: <BarChartIcon />, value: "reports" }, // Reports (Summary) commented out
   { label: "Driver Reports", icon: <PersonIcon />, value: "driverreports" },
 ];
 
@@ -86,9 +87,9 @@ function App() {
         expenseService.getAll()
       ]);
       
-      setTrucks(trucksResponse.data);
-      setTrips(tripsResponse.data);
-      setExpenses(expensesResponse.data);
+      setTrucks(trucksResponse.data?.data || []);
+      setTrips(tripsResponse.data?.data || []);
+      setExpenses(expensesResponse.data?.data || []);
       setError(null);
     } catch (err) {
       setError('Failed to fetch data. Please try again later.');
@@ -242,8 +243,8 @@ function App() {
               {page === "alltrips" && <AllTrips trips={trips} trucks={trucks} onTripDelete={handleTripDelete} />}
               {page === "trucks" && <TruckManager trucks={trucks} setTrucks={handleTruckUpdate} />}
               {page === "expenses" && <TruckExpenses trucks={trucks} expenses={expenses} setExpenses={setExpenses} />}
+              {page === "loads" && <LoadDetails />}
               {page === "profit" && <ProfitLoss />}
-              {/* {page === "reports" && <Reports trips={trips} clearTrips={clearTrips} />} */}
               {page === "driverreports" && <DriverReports trips={trips} />}
             </Box>
           </Paper>

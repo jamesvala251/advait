@@ -13,10 +13,20 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('trucks', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('trucks')) {
+            Schema::create('trucks', function (Blueprint $table) {
+                $table->id();
+                $table->string('truck_number')->unique();
+                $table->string('model')->default('Default');
+                $table->integer('capacity')->nullable();
+                $table->string('status')->default('active');
+                $table->string('owner_name')->nullable();
+                $table->string('owner_phone')->nullable();
+                $table->string('owner_address')->nullable();
+                $table->timestamps();
+                $table->softDeletes();
+            });
+        }
     }
 
     /**

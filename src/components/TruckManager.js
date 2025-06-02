@@ -15,7 +15,10 @@ import {
   DialogContent,
   DialogActions,
   Typography,
-  Snackbar
+  Snackbar,
+  Grid,
+  Paper,
+  Box
 } from "@mui/material";
 import { truckService } from "../services/api";
 
@@ -54,7 +57,8 @@ export default function TruckManager({ trucks, setTrucks }) {
     }
 
     // Check if truck number already exists
-    const truckNumberExists = trucks.some(
+    const trucksArray = trucks?.data || [];
+    const truckNumberExists = trucksArray.some(
       truck => truck.truck_number.toLowerCase() === form.truck_number.toLowerCase()
     );
     
@@ -97,9 +101,10 @@ export default function TruckManager({ trucks, setTrucks }) {
       
       if (response.data) {
         // Update trucks state with the new truck
-        const updatedTrucks = [...trucks, response.data];
+        const currentTrucks = trucks?.data || [];
+        const updatedTrucks = [...currentTrucks, response.data];
         console.log('Updated trucks array:', updatedTrucks);
-        setTrucks(updatedTrucks);
+        setTrucks({ data: updatedTrucks });
         
         // Reset form
         setForm({ 
@@ -224,94 +229,97 @@ export default function TruckManager({ trucks, setTrucks }) {
 
   return (
     <div>
-      <h2>Truck Management</h2>
+      <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold', mb: 3 }}>
+        Truck Management
+      </Typography>
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
       )}
-      <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-        <TextField 
-          label="Truck Number" 
-          name="truck_number" 
-          value={form.truck_number} 
-          onChange={handleChange}
-          disabled={loading}
-          required
-          error={!!error && error.includes("truck number")}
-          helperText={error && error.includes("truck number") ? error : ""}
-        />
-        <TextField 
-          label="Load Capacity (Ton)" 
-          name="capacity" 
-          value={form.capacity} 
-          onChange={handleChange}
-          disabled={loading}
-          type="number"
-          error={!!error && error.includes("capacity")}
-          helperText={error && error.includes("capacity") ? error : ""}
-        />
-        <Select 
-          name="status" 
-          value={form.status} 
-          onChange={handleChange}
-          disabled={loading}
-          sx={{ minWidth: 120 }}
-        >
-          <MenuItem value="active">Active</MenuItem>
-          <MenuItem value="inactive">Inactive</MenuItem>
-        </Select>
-        <Button 
-          variant="contained" 
-          onClick={handleAdd}
-          disabled={loading || !form.truck_number}
-        >
-          {loading ? 'Adding...' : 'Add Truck'}
-        </Button>
-        <Button 
-          variant="outlined" 
-          onClick={refreshTrucks}
-          disabled={loading}
-        >
-          Refresh
-        </Button>
-      </div>
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField 
+              fullWidth
+              label="Truck Number" 
+              name="truck_number" 
+              value={form.truck_number} 
+              onChange={handleChange}
+              disabled={loading}
+              required
+              error={!!error && error.includes("truck number")}
+              helperText={error && error.includes("truck number") ? error : ""}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField 
+              fullWidth
+              label="Load Capacity (Ton)" 
+              name="capacity" 
+              value={form.capacity} 
+              onChange={handleChange}
+              disabled={loading}
+              type="number"
+              InputProps={{ inputProps: { min: 0 } }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Select
+              fullWidth
+              name="status"
+              value={form.status}
+              onChange={handleChange}
+              disabled={loading}
+              displayEmpty
+            >
+              <MenuItem value="active">Active</MenuItem>
+              <MenuItem value="inactive">Inactive</MenuItem>
+            </Select>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={handleAdd}
+              disabled={loading}
+              sx={{ height: '56px' }}
+            >
+              Add Truck
+            </Button>
+          </Grid>
+        </Grid>
+      </Paper>
+
       <Table>
         <TableHead>
           <TableRow>
             <TableCell>Truck Number</TableCell>
             <TableCell>Model</TableCell>
-            <TableCell>Load Capacity (Ton)</TableCell>
+            <TableCell>Load Capacity</TableCell>
             <TableCell>Status</TableCell>
-            <TableCell>Delete</TableCell>
+            <TableCell align="right">Actions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          {trucks && trucks.length > 0 ? (
-            trucks.map((truck) => (
-              <TableRow key={`truck-${truck.id || truck.truck_number}`}>
-                <TableCell>{truck.truck_number}</TableCell>
-                <TableCell>{truck.model}</TableCell>
-                <TableCell>{truck.capacity}</TableCell>
-                <TableCell>{truck.status}</TableCell>
-                <TableCell>
-                  <Button 
-                    color="error" 
-                    onClick={() => handleDeleteClick(truck)}
-                    disabled={loading}
-                  >
-                    Delete
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={5} align="center">
-                No trucks found
+          {trucks?.data?.map((truck) => (
+            <TableRow key={truck.id}>
+              <TableCell>{truck.truck_number}</TableCell>
+              <TableCell>{truck.model}</TableCell>
+              <TableCell>{truck.capacity} Ton</TableCell>
+              <TableCell>{truck.status}</TableCell>
+              <TableCell align="right">
+                <Button
+                  size="small"
+                  color="error"
+                  onClick={() => handleDeleteClick(truck)}
+                  disabled={loading}
+                >
+                  Delete
+                </Button>
               </TableCell>
             </TableRow>
-          )}
+          ))}
         </TableBody>
       </Table>
 
@@ -323,21 +331,13 @@ export default function TruckManager({ trucks, setTrucks }) {
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete the truck with number "{deleteDialog.truckNumber}"?
-            This action cannot be undone.
+            Are you sure you want to delete truck {deleteDialog.truckNumber}?
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleDeleteCancel} disabled={loading}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleDeleteConfirm} 
-            color="error" 
-            disabled={loading}
-            variant="contained"
-          >
-            {loading ? 'Deleting...' : 'Delete'}
+          <Button onClick={handleDeleteCancel}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" disabled={loading}>
+            Delete
           </Button>
         </DialogActions>
       </Dialog>
@@ -345,7 +345,7 @@ export default function TruckManager({ trucks, setTrucks }) {
       {/* Success Message Snackbar */}
       <Snackbar
         open={!!successMessage}
-        autoHideDuration={3000}
+        autoHideDuration={6000}
         onClose={handleCloseSnackbar}
         message={successMessage}
       />

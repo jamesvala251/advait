@@ -55,7 +55,7 @@ class TripController extends Controller
             ])->get();
             
             Log::info('Retrieved trips:', ['count' => $trips->count(), 'trips' => $trips->toArray()]);
-            return response()->json($trips);
+            return response()->json(['data' => $trips]);
         } catch (\Exception $e) {
             Log::error('Error retrieving trips: ' . $e->getMessage());
             return response()->json([

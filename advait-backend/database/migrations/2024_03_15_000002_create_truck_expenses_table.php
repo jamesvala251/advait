@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('truck_expenses', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('truck_id')->constrained()->onDelete('cascade');
-            $table->enum('expense_type', ['maintenance', 'tyre']);
-            $table->date('date');
-            $table->decimal('amount', 10, 2);
-            $table->text('details');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('truck_expenses')) {
+            Schema::create('truck_expenses', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('truck_id')->constrained('trucks')->onDelete('cascade');
+                $table->enum('expense_type', ['maintenance', 'tyre']);
+                $table->date('date');
+                $table->decimal('amount', 10, 2);
+                $table->text('details');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

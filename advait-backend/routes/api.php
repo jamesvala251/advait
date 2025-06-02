@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\DriverReportController;
 use App\Http\Controllers\Api\DriverController;
 use App\Http\Controllers\Api\TripProfitLossController;
 use App\Http\Controllers\Api\TruckExpenseController;
+use App\Http\Controllers\Api\LoadDetailController;
 
 /*
 |--------------------------------------------------------------------------
@@ -71,3 +72,10 @@ Route::get('/reports/driver', [ReportController::class, 'driver']);
 Route::get('/reports/truck', [ReportController::class, 'truck']);
 Route::get('/reports/driver-details', [DriverReportController::class, 'index']);
 Route::get('/reports/trip-profit-loss', [TripProfitLossController::class, 'index']);
+
+// Load Details
+Route::get('/load-details', [LoadDetailController::class, 'index']);
+Route::post('/load-details', [LoadDetailController::class, 'store']);
+Route::get('/load-details/{id}', [LoadDetailController::class, 'show']);
+Route::put('/load-details/{id}', [LoadDetailController::class, 'update']);
+Route::delete('/load-details/{id}', [LoadDetailController::class, 'destroy']);

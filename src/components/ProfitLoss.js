@@ -46,8 +46,8 @@ export default function ProfitLoss() {
           driverService.getAll(),
           truckService.getAll()
         ]);
-        setDrivers(driversResponse.data || []);
-        setTrucks(trucksResponse.data || []);
+        setDrivers(driversResponse.data?.data || []);
+        setTrucks(trucksResponse.data?.data || []);
       } catch (err) {
         console.error('Error fetching filter data:', err);
       }

@@ -66,17 +66,17 @@ export default function TruckExpenses() {
         ]);
         console.log('Trucks response:', trucksResponse.data);
         console.log('Expenses response:', expensesResponse.data);
-        setTrucks(trucksResponse.data || []);
+        setTrucks(trucksResponse.data?.data || []);
         // Map expenses to include truck data
-        const expensesWithTrucks = (expensesResponse.data.expenses || []).map(expense => {
-          const truck = trucksResponse.data.find(t => t.id === expense.truck_id);
+        const expensesWithTrucks = (expensesResponse.data?.expenses || []).map(expense => {
+          const truck = (trucksResponse.data?.data || []).find(t => t.id === expense.truck_id);
           return {
             ...expense,
             truck: truck || null
           };
         });
         setExpenses(expensesWithTrucks);
-        setTotals(expensesResponse.data.totals || {
+        setTotals(expensesResponse.data?.totals || {
           total_amount: 0,
           maintenance_total: 0,
           tyre_total: 0
@@ -330,8 +330,34 @@ export default function TruckExpenses() {
       )}
 
       {/* Add/Edit Expense Dialog */}
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-        <DialogTitle>{isEditing ? 'Edit Expense' : 'Add New Expense'}</DialogTitle>
+      <Dialog 
+        open={openDialog} 
+        onClose={() => setOpenDialog(false)}
+        aria-labelledby="expense-dialog-title"
+        keepMounted={false}
+        disableEnforceFocus
+        disableAutoFocus
+        disablePortal
+        container={document.body}
+        hideBackdrop={false}
+        disableScrollLock
+        PaperProps={{
+          elevation: 24,
+          sx: {
+            position: 'relative',
+            zIndex: 1300
+          }
+        }}
+        BackdropProps={{
+          sx: {
+            position: 'fixed',
+            zIndex: 1299
+          }
+        }}
+      >
+        <DialogTitle id="expense-dialog-title">
+          {isEditing ? 'Edit Expense' : 'Add New Expense'}
+        </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
@@ -341,9 +367,13 @@ export default function TruckExpenses() {
                   value={currentExpense.truck_id}
                   onChange={(e) => setCurrentExpense(prev => ({ ...prev, truck_id: e.target.value }))}
                   label="Truck"
+                  MenuProps={{
+                    disablePortal: true,
+                    container: document.body
+                  }}
                 >
-                  {trucks.map((truck) => (
-                    <MenuItem key={`dialog-truck-${truck.id}`} value={truck.id}>
+                  {Array.isArray(trucks) && trucks.map((truck) => (
+                    <MenuItem key={truck.id} value={truck.id}>
                       {truck.truck_number}
                     </MenuItem>
                   ))}
@@ -358,8 +388,8 @@ export default function TruckExpenses() {
                   onChange={(e) => setCurrentExpense(prev => ({ ...prev, expense_type: e.target.value }))}
                   label="Expense Type"
                 >
-                  <MenuItem key="dialog-maintenance" value="maintenance">Maintenance</MenuItem>
-                  <MenuItem key="dialog-tyre" value="tyre">Tyre</MenuItem>
+                  <MenuItem value="maintenance">Maintenance</MenuItem>
+                  <MenuItem value="tyre">Tyre</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -380,9 +410,7 @@ export default function TruckExpenses() {
                 label="Amount"
                 value={currentExpense.amount}
                 onChange={(e) => setCurrentExpense(prev => ({ ...prev, amount: e.target.value }))}
-                InputProps={{
-                  startAdornment: <span>₹</span>
-                }}
+                InputProps={{ inputProps: { min: 0 } }}
               />
             </Grid>
             <Grid item xs={12}>
@@ -402,9 +430,9 @@ export default function TruckExpenses() {
           <Button 
             onClick={handleSave}
             variant="contained"
-            disabled={!currentExpense.truck_id || !currentExpense.expense_type || !currentExpense.date || !currentExpense.amount}
+            disabled={!currentExpense.truck_id || !currentExpense.expense_type || !currentExpense.date || !currentExpense.amount || !currentExpense.details}
           >
-            {isEditing ? 'Update' : 'Add'} Expense
+            {isEditing ? 'Update' : 'Save'}
           </Button>
         </DialogActions>
       </Dialog>

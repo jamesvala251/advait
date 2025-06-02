@@ -99,4 +99,12 @@ export const truckExpenseService = {
     getEditData: (id) => api.get(`/truck-expenses/${id}/edit`)
 };
 
+export const loadDetailService = {
+    getAll: () => api.get('/load-details'),
+    create: (data) => api.post('/load-details', data),
+    update: (id, data) => api.put(`/load-details/${id}`, data),
+    delete: (id) => api.delete(`/load-details/${id}`),
+    getById: (id) => api.get(`/load-details/${id}`)
+};
+
 export default api; 

@@ -17,7 +17,7 @@ class TruckController extends Controller
     public function index()
     {
         $trucks = Truck::with('trips')->get();
-        return response()->json($trucks);
+        return response()->json(['data' => $trucks]);
     }
 
     /**
