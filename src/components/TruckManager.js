@@ -302,7 +302,7 @@ export default function TruckManager({ trucks, setTrucks }) {
           </TableRow>
         </TableHead>
         <TableBody>
-          {trucks?.data?.map((truck) => (
+          {(Array.isArray(trucks?.data) ? trucks.data : Array.isArray(trucks) ? trucks : []).map((truck) => (
             <TableRow key={truck.id}>
               <TableCell>{truck.truck_number}</TableCell>
               <TableCell>{truck.model}</TableCell>
