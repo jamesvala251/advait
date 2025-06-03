@@ -91,14 +91,14 @@ export default function LoadDetails() {
   useEffect(() => {
     if (currentLoad.freight && currentLoad.load_qty) {
       const total = Number(currentLoad.freight) * Number(currentLoad.load_qty);
-      const balance = total - (Number(currentLoad.advance_payment) || 0) - (Number(currentLoad.commission) || 0);
+      const balance = total - (Number(currentLoad.advance_payment) || 0) - (Number(currentLoad.commission) || 0) - (Number(currentLoad.diesel_amount) || 0);
       setCurrentLoad(prev => ({
         ...prev,
         total_freight: total.toFixed(2),
         balance_payment: balance.toFixed(2)
       }));
     }
-  }, [currentLoad.freight, currentLoad.load_qty, currentLoad.advance_payment, currentLoad.commission]);
+  }, [currentLoad.freight, currentLoad.load_qty, currentLoad.advance_payment, currentLoad.commission, currentLoad.diesel_amount]);
 
   // Filter loads based on selected criteria
   const filteredLoads = loads.filter(load => {
