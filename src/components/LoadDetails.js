@@ -115,6 +115,9 @@ export default function LoadDetails() {
     return dateInRange && truckMatch;
   });
 
+  // Sort filteredLoads by id ascending before rendering
+  const sortedFilteredLoads = [...filteredLoads].sort((a, b) => a.id - b.id);
+
   const handleFilterChange = (field, value) => {
     setFilters(prev => ({
       ...prev,
@@ -214,7 +217,7 @@ export default function LoadDetails() {
   };
 
   const handlePrintSelected = () => {
-    const selectedLoadsData = filteredLoads.filter(load => selectedLoads.includes(load.id));
+    const selectedLoadsData = sortedFilteredLoads.filter(load => selectedLoads.includes(load.id));
     if (selectedLoadsData.length === 0) return;
 
     const printWindow = window.open('', '_blank');
@@ -242,14 +245,15 @@ export default function LoadDetails() {
           <table>
             <thead>
               <tr>
+                <th>Sr No</th>
                 <th>Date</th>
                 <th>Truck Number</th>
                 <th>Location</th>
                 <th>Load QTY</th>
-                <th>Diesel Amount</th>
                 <th>Freight</th>
                 <th>Total Freight</th>
                 <th>Advance Payment</th>
+                <th>Diesel Amount</th>
                 <th>Commission</th>
                 <th>Balance Payment</th>
               </tr>
@@ -259,14 +263,15 @@ export default function LoadDetails() {
                 const truck = trucks.find(t => t.id === load.truck_id);
                 return `
                   <tr>
+                    <td>${load.id}</td>
                     <td>${new Date(load.date).toLocaleDateString()}</td>
                     <td>${truck ? truck.truck_number : 'N/A'}</td>
                     <td>${load.location}</td>
                     <td>${load.load_qty}</td>
-                    <td>₹${Number(load.diesel_amount).toFixed(2)}</td>
                     <td>₹${Number(load.freight).toFixed(2)}</td>
                     <td>₹${Number(load.total_freight).toFixed(2)}</td>
                     <td>₹${Number(load.advance_payment).toFixed(2)}</td>
+                    <td>₹${Number(load.diesel_amount).toFixed(2)}</td>
                     <td>₹${Number(load.commission || 0).toFixed(2)}</td>
                     <td>₹${Number(load.balance_payment).toFixed(2)}</td>
                   </tr>
@@ -288,7 +293,7 @@ export default function LoadDetails() {
   };
 
   const handleExportExcel = () => {
-    const selectedLoadsData = filteredLoads.filter(load => selectedLoads.includes(load.id));
+    const selectedLoadsData = sortedFilteredLoads.filter(load => selectedLoads.includes(load.id));
     if (selectedLoadsData.length === 0) return;
 
     // Prepare data for Excel
@@ -450,10 +455,11 @@ export default function LoadDetails() {
         <Table>
           <TableHead>
             <TableRow>
+              <TableCell>Sr No</TableCell>
               <TableCell padding="checkbox">
                 <Checkbox
-                  checked={selectedLoads.length === filteredLoads.length && filteredLoads.length > 0}
-                  indeterminate={selectedLoads.length > 0 && selectedLoads.length < filteredLoads.length}
+                  indeterminate={selectedLoads.length > 0 && selectedLoads.length < sortedFilteredLoads.length}
+                  checked={sortedFilteredLoads.length > 0 && selectedLoads.length === sortedFilteredLoads.length}
                   onChange={handleSelectAll}
                 />
               </TableCell>
@@ -461,20 +467,21 @@ export default function LoadDetails() {
               <TableCell>Truck Number</TableCell>
               <TableCell>Location</TableCell>
               <TableCell>Load QTY</TableCell>
-              <TableCell>Diesel Amount</TableCell>
               <TableCell>Freight</TableCell>
               <TableCell>Total Freight</TableCell>
               <TableCell>Advance Payment</TableCell>
+              <TableCell>Diesel Amount</TableCell>
               <TableCell>Commission</TableCell>
               <TableCell>Balance Payment</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredLoads.map((load) => {
+            {sortedFilteredLoads.map((load) => {
               const truck = trucks.find(t => t.id === load.truck_id);
               return (
                 <TableRow key={load.id}>
+                  <TableCell>{load.id}</TableCell>
                   <TableCell padding="checkbox">
                     <Checkbox
                       checked={selectedLoads.includes(load.id)}
@@ -485,10 +492,10 @@ export default function LoadDetails() {
                   <TableCell>{truck ? truck.truck_number : 'N/A'}</TableCell>
                   <TableCell>{load.location}</TableCell>
                   <TableCell>{load.load_qty}</TableCell>
-                  <TableCell>₹{Number(load.diesel_amount).toFixed(2)}</TableCell>
                   <TableCell>₹{Number(load.freight).toFixed(2)}</TableCell>
                   <TableCell>₹{Number(load.total_freight).toFixed(2)}</TableCell>
                   <TableCell>₹{Number(load.advance_payment).toFixed(2)}</TableCell>
+                  <TableCell>₹{Number(load.diesel_amount).toFixed(2)}</TableCell>
                   <TableCell>₹{Number(load.commission || 0).toFixed(2)}</TableCell>
                   <TableCell>₹{Number(load.balance_payment).toFixed(2)}</TableCell>
                   <TableCell align="right">
@@ -516,6 +523,18 @@ export default function LoadDetails() {
                 </TableRow>
               );
             })}
+            {/* Total Row */}
+            <TableRow sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
+              <TableCell colSpan={5} sx={{ fontWeight: 'bold' }}>Total</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>{sortedFilteredLoads.reduce((sum, l) => sum + Number(l.load_qty || 0), 0)}</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>₹{sortedFilteredLoads.reduce((sum, l) => sum + Number(l.freight || 0), 0).toFixed(2)}</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>₹{sortedFilteredLoads.reduce((sum, l) => sum + Number(l.total_freight || 0), 0).toFixed(2)}</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>₹{sortedFilteredLoads.reduce((sum, l) => sum + Number(l.advance_payment || 0), 0).toFixed(2)}</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>₹{sortedFilteredLoads.reduce((sum, l) => sum + Number(l.diesel_amount || 0), 0).toFixed(2)}</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>₹{sortedFilteredLoads.reduce((sum, l) => sum + Number(l.commission || 0), 0).toFixed(2)}</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>₹{sortedFilteredLoads.reduce((sum, l) => sum + Number(l.balance_payment || 0), 0).toFixed(2)}</TableCell>
+              <TableCell />
+            </TableRow>
           </TableBody>
         </Table>
       )}
