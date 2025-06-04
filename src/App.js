@@ -120,8 +120,15 @@ function App() {
       const response = await tripService.create(trip);
       setTrips([...trips, response.data]);
     } catch (err) {
-      setError('Failed to add trip. Please try again.');
-      console.error('Error adding trip:', err);
+      let errorMsg = 'Failed to add trip.';
+      if (err.response?.data?.message) {
+        errorMsg += ' ' + err.response.data.message;
+      }
+      if (err.response?.data?.errors) {
+        errorMsg += ' ' + JSON.stringify(err.response.data.errors);
+      }
+      setError(errorMsg);
+      console.error('Error adding trip:', err.response?.data || err.message || err);
     }
   };
 
@@ -240,7 +247,7 @@ function App() {
           <Paper elevation={3} sx={{ p: { xs: 1, sm: 3 }, mt: 4, maxWidth: '100%', overflowX: 'auto' }}>
             <Box>
               {page === "entry" && <TripEntryForm trucks={trucks} addTrip={addTrip} trips={trips} />}
-              {page === "alltrips" && <AllTrips trips={trips} trucks={trucks} onTripDelete={handleTripDelete} />}
+              {page === "alltrips" && <AllTrips trips={trips} trucks={trucks} onTripDelete={handleTripDelete} setTrips={setTrips} />}
               {page === "trucks" && <TruckManager trucks={trucks} setTrucks={handleTruckUpdate} />}
               {page === "expenses" && <TruckExpenses trucks={trucks} expenses={expenses} setExpenses={setExpenses} />}
               {page === "loads" && <LoadDetails />}

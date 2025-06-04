@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Paper,
   Table,
@@ -55,6 +55,8 @@ export default function TruckExpenses() {
     amount: "",
     details: ""
   });
+
+  const dialogButtonRef = useRef();
 
   // Fetch all trucks and expenses
   useEffect(() => {
@@ -190,6 +192,7 @@ export default function TruckExpenses() {
           variant="contained"
           startIcon={<AddIcon />}
           onClick={handleAddClick}
+          ref={dialogButtonRef}
         >
           Add Expense
         </Button>
@@ -296,7 +299,7 @@ export default function TruckExpenses() {
                           size="small"
                           color="primary"
                           onClick={() => handleEditClick(expense.id)}
-                          sx={{ mr: 1 }}
+                          ref={dialogButtonRef}
                         >
                           <EditIcon />
                         </IconButton>
@@ -332,7 +335,10 @@ export default function TruckExpenses() {
       {/* Add/Edit Expense Dialog */}
       <Dialog 
         open={openDialog} 
-        onClose={() => setOpenDialog(false)}
+        onClose={() => {
+          setOpenDialog(false);
+          dialogButtonRef.current?.focus();
+        }}
         aria-labelledby="expense-dialog-title"
         keepMounted={false}
         disableEnforceFocus

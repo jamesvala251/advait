@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   Table, 
   TableHead, 
@@ -27,9 +27,12 @@ import * as XLSX from "xlsx";
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import PrintIcon from '@mui/icons-material/Print';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import { tripService } from '../services/api';
+import TripEntryForm from "./TripEntryForm";
+import { driverService } from '../services/api';
 
-export default function AllTrips({ trips, trucks, onTripDelete }) {
+export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
   const [selectedTrips, setSelectedTrips] = useState([]);
   const [filters, setFilters] = useState({
     truckNumber: '',
@@ -40,18 +43,14 @@ export default function AllTrips({ trips, trucks, onTripDelete }) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [tripToDelete, setTripToDelete] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
-
-  // Debug logging
-  console.log('All Trips:', trips);
-  console.log('All Trucks:', trucks);
-  trips.forEach((trip, index) => {
-    console.log(`Trip ${index + 1}:`, {
-      trip_id: trip.id,
-      truck_id: trip.truck_id,
-      truck_data: trip.truck,
-      found_truck: trucks.find(t => t.id === trip.truck_id)
-    });
-  });
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingTrip, setEditingTrip] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [editError, setEditError] = useState("");
+  const [editSuccess, setEditSuccess] = useState("");
+  const [drivers, setDrivers] = useState([]);
+  const editButtonRef = useRef();
+  const deleteButtonRef = useRef();
 
   const columns = [
     "Trip Number", "Truck", "Driver Name", "Start Date", "End Date", "From", "To", "Party Name", "Compressor", "Start KM", "End KM", "Total KM", "Diesel Qty", "Diesel Amount", "Toll", "Driver Salary", "Advanced Salary", "Maintenance", "Freight", "Weight", "Total Freight", "Total Expenses", "Total Profit", "Per Day Profit"
@@ -60,12 +59,6 @@ export default function AllTrips({ trips, trucks, onTripDelete }) {
   const mapTripToExport = (t) => {
     // Get diesel quantity from fuel_consumed field
     const dieselQty = t.fuel_consumed || 0;
-    // Use the truck data from the trip's relationship
-    console.log('Mapping trip to export:', {
-      trip_id: t.id,
-      truck_id: t.truck_id,
-      truck_data: t.truck
-    });
     
     return {
       "Trip Number": t.trip_number || t.tripNumber,
@@ -301,19 +294,205 @@ export default function AllTrips({ trips, trucks, onTripDelete }) {
     setDeleteDialogOpen(false);
     setTripToDelete(null);
     setDeleteError(null);
+    deleteButtonRef.current?.focus();
   };
+
+  const handleEditClick = (trip) => {
+    setEditingTrip(trip);
+    setEditForm({
+      truckNumber: trip.truck?.truck_number || trip.truckNumber || "",
+      driverName: trip.driver?.name || trip.driverName || "",
+      startDate: trip.start_date || trip.startDate || "",
+      endDate: trip.end_date || trip.endDate || "",
+      from: trip.origin || trip.from || "",
+      to: trip.destination || trip.to || "",
+      partyName: trip.party_name || trip.partyName || "",
+      compressor: trip.compressor || "No",
+      startKm: trip.start_km || trip.startKm || "",
+      endKm: trip.end_km || trip.endKm || "",
+      dieselQty: trip.fuel_consumed || trip.dieselQty || "",
+      dieselAmount: trip.diesel_amount || trip.dieselAmount || "",
+      toll: trip.toll || "",
+      driverSalary: trip.driver_salary || trip.driverSalary || "",
+      advancedSalary: trip.advanced_salary || trip.advancedSalary || "",
+      maintenance: trip.maintenance || "",
+      freight: trip.freight || "",
+      weight: trip.weight || "",
+      totalFreight: trip.total_freight || trip.totalFreight || "",
+      totalKm: trip.total_km || trip.totalKm || "",
+      totalExpenses: trip.total_expenses || trip.totalExpenses || "",
+      totalProfit: trip.total_profit || trip.totalProfit || "",
+      perDayProfit: trip.per_day_profit || trip.perDayProfit || ""
+    });
+    setEditDialogOpen(true);
+    setEditError("");
+    setEditSuccess("");
+  };
+
+  const handleEditFormChange = (e) => {
+    const { name, value } = e.target;
+    // Always update the state so the user can type
+    const newForm = { ...editForm, [name]: value };
+
+    // Validate End KM is greater than Start KM, but do not block typing
+    let error = "";
+    if ((name === 'startKm' || name === 'endKm')) {
+      const startKm = Number(name === 'startKm' ? value : newForm.startKm) || 0;
+      const endKm = Number(name === 'endKm' ? value : newForm.endKm) || 0;
+      if (newForm.startKm !== "" && newForm.endKm !== "" && endKm <= startKm) {
+        error = "End KM must be greater than Start KM";
+      }
+      // Calculate Total KM if both are valid numbers
+      if (!error && newForm.startKm !== "" && newForm.endKm !== "") {
+        newForm.totalKm = endKm - startKm;
+      } else {
+        newForm.totalKm = "";
+      }
+    }
+
+    // Calculate Total Freight
+    if (name === 'freight' || name === 'weight') {
+      const freight = Number(newForm.freight) || 0;
+      const weight = Number(newForm.weight) || 0;
+      newForm.totalFreight = freight * weight;
+    }
+
+    // Calculate Total Expenses
+    if (name === 'dieselAmount' || name === 'toll' || name === 'driverSalary' || 
+        name === 'advancedSalary' || name === 'maintenance') {
+      const dieselAmount = Number(newForm.dieselAmount) || 0;
+      const toll = Number(newForm.toll) || 0;
+      const driverSalary = Number(newForm.driverSalary) || 0;
+      const advancedSalary = Number(newForm.advancedSalary) || 0;
+      const maintenance = Number(newForm.maintenance) || 0;
+      newForm.totalExpenses = dieselAmount + toll + driverSalary + advancedSalary + maintenance;
+    }
+
+    // Always calculate Total Profit and Per Day Profit after any change
+    const totalFreight = Number(newForm.totalFreight) || 0;
+    const totalExpenses = Number(newForm.totalExpenses) || 0;
+    newForm.totalProfit = totalFreight - totalExpenses;
+
+    // Calculate Per Day Profit
+    const startDate = new Date(newForm.startDate);
+    const endDate = new Date(newForm.endDate);
+    const days = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)));
+    newForm.perDayProfit = newForm.totalProfit / days;
+
+    setEditForm(newForm);
+    setEditError(error); // Only set error, do not block typing
+  };
+
+  const toDateString = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    if (isNaN(d)) return '';
+    return d.toISOString().slice(0, 10);
+  };
+
+  const handleEditSave = async () => {
+    try {
+      setEditError("");
+      setEditSuccess("");
+      // Prepare payload with camelCase keys and truckNumber/driverName
+      const payload = {
+        truckNumber: editForm.truckNumber,
+        driverName: editForm.driverName,
+        from: editForm.from,
+        to: editForm.to,
+        startDate: toDateString(editForm.startDate),
+        endDate: toDateString(editForm.endDate),
+        partyName: editForm.partyName,
+        compressor: editForm.compressor,
+        startKm: Number(editForm.startKm),
+        endKm: Number(editForm.endKm),
+        dieselQty: Number(editForm.dieselQty),
+        dieselAmount: Number(editForm.dieselAmount),
+        toll: Number(editForm.toll),
+        driverSalary: Number(editForm.driverSalary),
+        advancedSalary: Number(editForm.advancedSalary),
+        maintenance: Number(editForm.maintenance),
+        freight: Number(editForm.freight),
+        weight: Number(editForm.weight),
+        totalFreight: Number(editForm.totalFreight),
+        totalKm: Number(editForm.totalKm),
+        totalExpenses: Number(editForm.totalExpenses),
+        totalProfit: Number(editForm.totalProfit),
+        perDayProfit: Number(editForm.perDayProfit)
+      };
+      console.log('Trip update payload:', payload);
+      // Check for missing required fields
+      const requiredFields = [
+        'truckNumber', 'driverName', 'from', 'to', 'startDate', 'endDate', 'partyName', 'startKm', 'endKm',
+        'dieselQty', 'dieselAmount', 'toll', 'driverSalary', 'advancedSalary', 'maintenance', 'freight', 'weight',
+        'totalFreight', 'totalKm', 'totalExpenses', 'totalProfit', 'perDayProfit'
+      ];
+      const missing = requiredFields.filter(f => payload[f] === undefined || payload[f] === null || payload[f] === '' || (typeof payload[f] === 'number' && isNaN(payload[f])));
+      if (missing.length > 0) {
+        setEditError('Please fill all required fields: ' + missing.join(', '));
+        return;
+      }
+      const response = await tripService.update(editingTrip.id, payload);
+      // Update trips state with the response data from the backend
+      if (setTrips) {
+        setTrips(prevTrips => prevTrips.map(trip => 
+          trip.id === editingTrip.id ? response.data : trip
+        ));
+      }
+      setEditSuccess("Trip updated successfully.");
+      setEditError("");
+      setEditDialogOpen(false);
+      setEditingTrip(null);
+    } catch (err) {
+      let msg = "Failed to update trip.";
+      if (err.response?.data?.message) msg += " " + err.response.data.message;
+      if (err.response?.data?.errors) msg += " " + JSON.stringify(err.response.data.errors);
+      msg += "\nFull error: " + JSON.stringify(err, Object.getOwnPropertyNames(err));
+      setEditError(msg);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditDialogOpen(false);
+    setEditingTrip(null);
+    setEditError("");
+    setEditSuccess("");
+    editButtonRef.current?.focus();
+  };
+
+  // Helper to format date for input type="date"
+  function toDateInputValue(dateString) {
+    if (!dateString) return "";
+    const d = new Date(dateString);
+    if (isNaN(d)) return "";
+    return d.toISOString().slice(0, 10);
+  }
+
+  // Fetch drivers on mount
+  useEffect(() => {
+    async function fetchDrivers() {
+      try {
+        const response = await driverService.getAll();
+        setDrivers(response.data?.data || response.data || []);
+      } catch (err) {
+        console.error('Error fetching drivers:', err);
+      }
+    }
+    fetchDrivers();
+  }, []);
+
+  // Add this useEffect after all state declarations
+  useEffect(() => {
+    if (!editDialogOpen) {
+      setEditError("");
+      setEditSuccess("");
+    }
+  }, [editDialogOpen]);
 
   return (
     <Paper sx={{ p: 2 }}>
       <Typography variant="h5" gutterBottom>All Trips</Typography>
       
-      {/* Debug info */}
-      <Box sx={{ mb: 2, p: 1, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-        <Typography variant="body2" color="textSecondary">
-          Total Trips: {trips.length}
-        </Typography>
-      </Box>
-
       {/* Filters Section */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={3}>
@@ -417,11 +596,6 @@ export default function AllTrips({ trips, trucks, onTripDelete }) {
         <TableBody>
           {filteredTrips.map((t) => {
             const exportObj = mapTripToExport(t);
-            console.log('Rendering trip row:', {
-              trip_id: t.id,
-              truck_id: t.truck_id,
-              truck_data: t.truck
-            });
             
             return (
               <TableRow key={t.id}>
@@ -459,13 +633,18 @@ export default function AllTrips({ trips, trucks, onTripDelete }) {
                 })}
                 <TableCell>
                   <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Tooltip title="Edit Trip">
+                      <IconButton size="small" color="primary" onClick={() => handleEditClick(t)} ref={editButtonRef}>
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                     <Tooltip title="Export Excel">
                       <IconButton size="small" onClick={() => exportToExcel([exportObj], `trip_${t.trip_number || t.tripNumber}.xlsx`)}>
                         <FileDownloadIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Delete Trip">
-                      <IconButton size="small" color="error" onClick={() => handleDeleteClick(t)}>
+                      <IconButton size="small" color="error" onClick={() => handleDeleteClick(t)} ref={deleteButtonRef}>
                         <DeleteIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
@@ -495,6 +674,181 @@ export default function AllTrips({ trips, trucks, onTripDelete }) {
           <Button onClick={handleDeleteConfirm} color="error" variant="contained">
             Delete
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Trip Dialog */}
+      <Dialog open={editDialogOpen} onClose={handleEditCancel} maxWidth="md" fullWidth>
+        <DialogTitle>Edit Trip</DialogTitle>
+        <DialogContent>
+          {editDialogOpen && editError && (
+            <Typography color="error" sx={{ mb: 2 }}>{editError}</Typography>
+          )}
+          {editSuccess && <Typography color="success.main" sx={{ mb: 2 }}>{editSuccess}</Typography>}
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6} md={4}>
+              <FormControl fullWidth>
+                <InputLabel>Truck Number</InputLabel>
+                <Select
+                  name="truckNumber"
+                  value={editForm.truckNumber || ""}
+                  onChange={handleEditFormChange}
+                  label="Truck Number"
+                >
+                  <MenuItem value="">Select Truck</MenuItem>
+                  {trucks.map((t) => (
+                    <MenuItem key={t.id} value={t.truck_number}>
+                      {t.truck_number} ({t.model} - {t.capacity} Ton)
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <FormControl fullWidth>
+                <InputLabel>Driver Name</InputLabel>
+                <Select
+                  name="driverName"
+                  value={editForm.driverName || ""}
+                  onChange={handleEditFormChange}
+                  label="Driver Name"
+                >
+                  <MenuItem value="">Select Driver</MenuItem>
+                  {[...new Set(drivers.map(d => d.name))]
+                    .filter(name => name) // Filter out any null/undefined names
+                    .map((name, index) => (
+                      <MenuItem key={`driver-${index}`} value={name}>
+                        {name}
+                      </MenuItem>
+                    ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField label="Start Date" name="startDate" type="date" value={toDateInputValue(editForm.startDate)} onChange={handleEditFormChange} InputLabelProps={{ shrink: true }} fullWidth />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField label="End Date" name="endDate" type="date" value={toDateInputValue(editForm.endDate)} onChange={handleEditFormChange} InputLabelProps={{ shrink: true }} fullWidth />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField label="From" name="from" value={editForm.from || ""} onChange={handleEditFormChange} fullWidth />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField label="To" name="to" value={editForm.to || ""} onChange={handleEditFormChange} fullWidth />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField label="Party Name" name="partyName" value={editForm.partyName || ""} onChange={handleEditFormChange} fullWidth />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <FormControl fullWidth>
+                <InputLabel>Compressor</InputLabel>
+                <Select name="compressor" value={editForm.compressor || ""} onChange={handleEditFormChange}>
+                  <MenuItem value="Yes">Yes</MenuItem>
+                  <MenuItem value="No">No</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField 
+                label="Start KM" 
+                name="startKm" 
+                type="number" 
+                value={editForm.startKm === undefined || editForm.startKm === null ? '' : editForm.startKm} 
+                onChange={handleEditFormChange}
+                fullWidth 
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField 
+                label="End KM" 
+                name="endKm" 
+                type="number" 
+                value={editForm.endKm === undefined || editForm.endKm === null ? '' : editForm.endKm} 
+                onChange={handleEditFormChange}
+                error={!!editError && editError.includes('End KM')}
+                helperText={!!editError && editError.includes('End KM') ? editError : ''}
+                fullWidth 
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField label="Diesel Qty" name="dieselQty" type="number" value={editForm.dieselQty || ""} onChange={handleEditFormChange} fullWidth />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField label="Diesel Amount" name="dieselAmount" type="number" value={editForm.dieselAmount || ""} onChange={handleEditFormChange} fullWidth />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField label="Toll" name="toll" type="number" value={editForm.toll || ""} onChange={handleEditFormChange} fullWidth />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField label="Driver Salary" name="driverSalary" type="number" value={editForm.driverSalary || ""} onChange={handleEditFormChange} fullWidth />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField label="Advanced Salary" name="advancedSalary" type="number" value={editForm.advancedSalary || ""} onChange={handleEditFormChange} fullWidth />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField label="Maintenance" name="maintenance" type="number" value={editForm.maintenance || ""} onChange={handleEditFormChange} fullWidth />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField label="Freight" name="freight" type="number" value={editForm.freight || ""} onChange={handleEditFormChange} fullWidth />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField label="Weight" name="weight" type="number" value={editForm.weight || ""} onChange={handleEditFormChange} fullWidth />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField 
+                label="Total KM" 
+                name="totalKm" 
+                type="number" 
+                value={editForm.totalKm === undefined || editForm.totalKm === null ? '' : editForm.totalKm} 
+                InputProps={{ readOnly: true }}
+                fullWidth 
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField 
+                label="Total Freight" 
+                name="totalFreight" 
+                type="number" 
+                value={editForm.totalFreight === undefined || editForm.totalFreight === null ? '' : editForm.totalFreight} 
+                InputProps={{ readOnly: true }}
+                fullWidth 
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField 
+                label="Total Expenses" 
+                name="totalExpenses" 
+                type="number" 
+                value={editForm.totalExpenses === undefined || editForm.totalExpenses === null ? '' : editForm.totalExpenses} 
+                InputProps={{ readOnly: true }}
+                fullWidth 
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField 
+                label="Total Profit" 
+                name="totalProfit" 
+                type="number" 
+                value={editForm.totalProfit === undefined || editForm.totalProfit === null ? '' : editForm.totalProfit} 
+                InputProps={{ readOnly: true }}
+                fullWidth 
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField 
+                label="Per Day Profit" 
+                name="perDayProfit" 
+                type="number" 
+                value={editForm.perDayProfit === undefined || editForm.perDayProfit === null ? '' : editForm.perDayProfit} 
+                InputProps={{ readOnly: true }}
+                fullWidth 
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleEditCancel}>Cancel</Button>
+          <Button onClick={handleEditSave} variant="contained" color="primary">Save</Button>
         </DialogActions>
       </Dialog>
     </Paper>

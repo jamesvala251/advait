@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Paper,
   Table,
@@ -63,6 +63,8 @@ export default function LoadDetails() {
     endDate: '',
     truckId: ''
   });
+
+  const dialogButtonRef = useRef();
 
   // Fetch all trucks and loads
   useEffect(() => {
@@ -375,6 +377,7 @@ export default function LoadDetails() {
             startIcon={<AddIcon />}
             onClick={handleAddClick}
             fullWidth={false}
+            ref={dialogButtonRef}
           >
             Add Load
           </Button>
@@ -495,6 +498,7 @@ export default function LoadDetails() {
                         color="primary"
                         onClick={() => handleEditClick(load)}
                         sx={{ mr: 1 }}
+                        ref={dialogButtonRef}
                       >
                         <EditIcon />
                       </IconButton>
@@ -519,7 +523,10 @@ export default function LoadDetails() {
       {/* Add/Edit Load Dialog */}
       <Modal
         open={openDialog}
-        onClose={() => setOpenDialog(false)}
+        onClose={() => {
+          setOpenDialog(false);
+          dialogButtonRef.current?.focus();
+        }}
         aria-labelledby="load-dialog-title"
         sx={{
           display: 'flex',

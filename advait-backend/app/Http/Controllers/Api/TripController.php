@@ -296,7 +296,7 @@ class TripController extends Controller
 
             DB::commit();
             Log::info('Updated trip:', $trip->toArray());
-            return response()->json($trip->load(['truck', 'driver']));
+            return response()->json($trip->load(['truck', 'driver']), 200);
 
         } catch (\Exception $e) {
             DB::rollBack();

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   Button, 
   Table, 
@@ -33,6 +33,9 @@ export default function TruckManager({ trucks, setTrucks }) {
   const [loading, setLoading] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState({ open: false, truckId: null, truckNumber: '' });
   const [successMessage, setSuccessMessage] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingTruckId, setEditingTruckId] = useState(null);
+  const deleteButtonRef = useRef();
 
   // Add useEffect to log trucks data changes
   useEffect(() => {
@@ -76,55 +79,55 @@ export default function TruckManager({ trucks, setTrucks }) {
     return true;
   };
 
-  const handleAdd = async () => {
+  const handleEditClick = (truck) => {
+    setForm({
+      truck_number: truck.truck_number,
+      capacity: truck.capacity,
+      status: truck.status,
+      model: truck.model || "Default"
+    });
+    setIsEditing(true);
+    setEditingTruckId(truck.id);
+    setError(null);
+  };
+
+  const handleSubmit = async () => {
     if (!validateForm()) {
       return;
     }
-    
     try {
       setLoading(true);
       setError(null);
-
-      // Format the data to match the API expectations
       const truckData = {
         truck_number: form.truck_number.trim(),
         capacity: form.capacity ? parseInt(form.capacity) : null,
         status: form.status,
         model: form.model || "Default"
       };
-
-      // Log the exact data being sent
-      console.log('Sending truck data:', JSON.stringify(truckData, null, 2));
-      
-      const response = await truckService.create(truckData);
-      console.log('Server response:', response.data);
-      
-      if (response.data) {
-        // Update trucks state with the new truck
-        const currentTrucks = trucks?.data || [];
-        const updatedTrucks = [...currentTrucks, response.data];
-        console.log('Updated trucks array:', updatedTrucks);
-        setTrucks({ data: updatedTrucks });
-        
-        // Reset form
-        setForm({ 
-          truck_number: "", 
-          capacity: "", 
-          status: "active",
-          model: "Default" 
-        });
-
-        setSuccessMessage('Truck added successfully');
+      if (isEditing && editingTruckId) {
+        // Update truck
+        const response = await truckService.update(editingTruckId, truckData);
+        // Refresh truck list
+        const updatedTrucksResponse = await truckService.getAll();
+        setTrucks(updatedTrucksResponse.data);
+        setSuccessMessage('Truck updated successfully');
       } else {
-        throw new Error('No data received from server');
+        // Add truck
+        const response = await truckService.create(truckData);
+        if (response.data) {
+          const currentTrucks = trucks?.data || [];
+          const updatedTrucks = [...currentTrucks, response.data];
+          setTrucks({ data: updatedTrucks });
+          setSuccessMessage('Truck added successfully');
+        } else {
+          throw new Error('No data received from server');
+        }
       }
+      setForm({ truck_number: "", capacity: "", status: "active", model: "Default" });
+      setIsEditing(false);
+      setEditingTruckId(null);
     } catch (err) {
-      console.error('Full error object:', err);
-      console.error('Error response:', err.response?.data);
-      console.error('Error status:', err.response?.status);
-      console.error('Error headers:', err.response?.headers);
-      
-      let errorMessage = 'Failed to add truck. ';
+      let errorMessage = 'Failed to save truck. ';
       if (err.response?.data?.message) {
         errorMessage += err.response.data.message;
       } else if (err.response?.data?.error) {
@@ -132,7 +135,6 @@ export default function TruckManager({ trucks, setTrucks }) {
       } else {
         errorMessage += 'Please try again.';
       }
-      
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -188,6 +190,7 @@ export default function TruckManager({ trucks, setTrucks }) {
 
   const handleDeleteCancel = () => {
     setDeleteDialog({ open: false, truckId: null, truckNumber: '' });
+    deleteButtonRef.current?.focus();
   };
 
   // Add function to refresh trucks data
@@ -281,11 +284,11 @@ export default function TruckManager({ trucks, setTrucks }) {
             <Button
               fullWidth
               variant="contained"
-              onClick={handleAdd}
+              onClick={handleSubmit}
               disabled={loading}
               sx={{ height: '56px' }}
             >
-              Add Truck
+              {isEditing ? 'Update Truck' : 'Add Truck'}
             </Button>
           </Grid>
         </Grid>
@@ -311,9 +314,19 @@ export default function TruckManager({ trucks, setTrucks }) {
               <TableCell align="right">
                 <Button
                   size="small"
+                  color="primary"
+                  onClick={() => handleEditClick(truck)}
+                  disabled={loading}
+                  sx={{ mr: 1 }}
+                >
+                  Edit
+                </Button>
+                <Button
+                  size="small"
                   color="error"
                   onClick={() => handleDeleteClick(truck)}
                   disabled={loading}
+                  ref={deleteButtonRef}
                 >
                   Delete
                 </Button>
