@@ -11,7 +11,12 @@ root.render(
   </React.StrictMode>
 );
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://cra.link/PWA
-serviceWorker.register(); 
+// Register service worker with specific configuration
+serviceWorker.register({
+  onSuccess: (registration) => {
+    console.log('Service Worker registered successfully');
+  },
+  onUpdate: (registration) => {
+    console.log('New content is available; please refresh.');
+  }
+}); 
