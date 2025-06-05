@@ -1,0 +1,27 @@
+{
+  "short_name": "Advait",
+  "name": "Advait Truck & Trip Management",
+  "icons": [
+    {
+      "src": "icons/icon-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#1976d2",
+  "background_color": "#ffffff",
+  "orientation": "portrait",
+  "description": "Truck and Trip Management System",
+  "dir": "ltr",
+  "lang": "en-US",
+  "prefer_related_applications": false
+} 
