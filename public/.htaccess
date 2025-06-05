@@ -20,6 +20,7 @@ Header set Access-Control-Allow-Headers "Content-Type"
     Header set Content-Type "application/javascript"
     Header set Service-Worker-Allowed "/"
     Header set Cache-Control "no-cache"
+    Header set X-Content-Type-Options "nosniff"
 </FilesMatch>
 
 # Enable rewrite engine
@@ -55,3 +56,7 @@ Options -Indexes
     AddOutputFilterByType DEFLATE application/x-javascript
     AddOutputFilterByType DEFLATE application/json
 </IfModule>
+
+# Force HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

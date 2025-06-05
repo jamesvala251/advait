@@ -11,12 +11,5 @@ root.render(
   </React.StrictMode>
 );
 
-// Register service worker with specific configuration
-serviceWorker.register({
-  onSuccess: (registration) => {
-    console.log('Service Worker registered successfully');
-  },
-  onUpdate: (registration) => {
-    console.log('New content is available; please refresh.');
-  }
-}); 
+// Unregister the service worker to remove PWA functionality
+serviceWorker.unregister(); 
