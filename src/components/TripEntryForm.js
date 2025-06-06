@@ -55,9 +55,7 @@ export default function TripEntryForm({ trucks, addTrip }) {
     Number(form.dieselAmount || 0) +
     Number(form.toll || 0) +
     Number(form.driverSalary || 0) +
-    Number(form.advancedSalary || 0) +
-    Number(form.maintenance || 0) +
-    Number(form.freight || 0);
+    Number(form.maintenance || 0);
   const totalProfit = totalFreight !== "" ? totalFreight - totalExpenses : "";
   const tripDays =
     form.startDate && form.endDate
@@ -95,25 +93,28 @@ export default function TripEntryForm({ trucks, addTrip }) {
 
     // Calculate Total Expenses
     if (name === 'dieselAmount' || name === 'toll' || name === 'driverSalary' || 
-        name === 'advancedSalary' || name === 'maintenance') {
+        name === 'maintenance') {
       const dieselAmount = Number(newForm.dieselAmount) || 0;
       const toll = Number(newForm.toll) || 0;
       const driverSalary = Number(newForm.driverSalary) || 0;
-      const advancedSalary = Number(newForm.advancedSalary) || 0;
       const maintenance = Number(newForm.maintenance) || 0;
-      newForm.totalExpenses = dieselAmount + toll + driverSalary + advancedSalary + maintenance;
+      newForm.totalExpenses = dieselAmount + toll + driverSalary + maintenance;
     }
 
-    // Calculate Total Profit
-    const totalFreight = Number(newForm.totalFreight) || 0;
-    const totalExpenses = Number(newForm.totalExpenses) || 0;
-    newForm.totalProfit = totalFreight - totalExpenses;
+    // Calculate Total Profit and Per Day Profit only if relevant fields changed
+    if (name === 'dieselAmount' || name === 'toll' || name === 'driverSalary' || 
+        name === 'maintenance' || name === 'freight' || name === 'weight' || 
+        name === 'startDate' || name === 'endDate') {
+      const totalFreight = Number(newForm.totalFreight) || 0;
+      const totalExpenses = Number(newForm.totalExpenses) || 0;
+      newForm.totalProfit = totalFreight - totalExpenses;
 
-    // Calculate Per Day Profit
-    const startDate = new Date(newForm.startDate);
-    const endDate = new Date(newForm.endDate);
-    const days = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)));
-    newForm.perDayProfit = newForm.totalProfit / days;
+      // Calculate Per Day Profit
+      const startDate = new Date(newForm.startDate);
+      const endDate = new Date(newForm.endDate);
+      const days = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)));
+      newForm.perDayProfit = newForm.totalProfit / days;
+    }
 
     setForm(newForm);
     setFormError(error); // Only set error, do not block typing

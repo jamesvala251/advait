@@ -227,7 +227,18 @@ export default function LoadDetails() {
           <title>Selected Load Details</title>
           <style>
             body { font-family: Arial, sans-serif; padding: 20px; }
-            .header { text-align: center; margin-bottom: 20px; }
+            .header { 
+              text-align: center; 
+              margin-bottom: 20px;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+            }
+            .logo {
+              width: 110px;
+              height: auto;
+              margin-bottom: 10px;
+            }
             table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
             th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
             th { background-color: #f5f5f5; }
@@ -240,7 +251,7 @@ export default function LoadDetails() {
         </head>
         <body>
           <div class="header">
-            <h2>Load Details Report</h2>
+            <img src="https://advaitroadmovers.com/logo.jpg" alt="Advait Road Movers" class="logo">
           </div>
           <table>
             <thead>
@@ -264,7 +275,7 @@ export default function LoadDetails() {
                 return `
                   <tr>
                     <td>${load.id}</td>
-                    <td>${new Date(load.date).toLocaleDateString()}</td>
+                    <td>${new Date(load.date).toLocaleDateString('en-GB')}</td>
                     <td>${truck ? truck.truck_number : 'N/A'}</td>
                     <td>${load.location}</td>
                     <td>${load.load_qty}</td>
@@ -280,7 +291,7 @@ export default function LoadDetails() {
             </tbody>
           </table>
           <div class="footer">
-            <p>Printed on: ${new Date().toLocaleString()}</p>
+            <p>Printed on: ${new Date().toLocaleDateString('en-GB')}</p>
           </div>
           <div class="no-print" style="text-align: center; margin-top: 20px;">
             <button onclick="window.print()">Print</button>
@@ -300,7 +311,7 @@ export default function LoadDetails() {
     const excelData = selectedLoadsData.map(load => {
       const truck = trucks.find(t => t.id === load.truck_id);
       return {
-        'Date': new Date(load.date).toLocaleDateString(),
+        'Date': new Date(load.date).toLocaleDateString('en-GB'),
         'Truck Number': truck ? truck.truck_number : 'N/A',
         'Location': load.location,
         'Load QTY': load.load_qty,
@@ -488,7 +499,7 @@ export default function LoadDetails() {
                       onChange={() => handleSelectLoad(load.id)}
                     />
                   </TableCell>
-                  <TableCell>{new Date(load.date).toLocaleDateString()}</TableCell>
+                  <TableCell>{new Date(load.date).toLocaleDateString('en-GB')}</TableCell>
                   <TableCell>{truck ? truck.truck_number : 'N/A'}</TableCell>
                   <TableCell>{load.location}</TableCell>
                   <TableCell>{load.load_qty}</TableCell>

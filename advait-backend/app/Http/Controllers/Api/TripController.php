@@ -174,7 +174,10 @@ class TripController extends Controller
                 'weight' => floatval($request->weight),
                 'total_freight' => floatval($request->totalFreight),
                 'total_km' => floatval($request->totalKm),
-                'total_expenses' => floatval($request->totalExpenses),
+                'total_expenses' => floatval($request->dieselAmount) + 
+                    floatval($request->toll) + 
+                    floatval($request->driverSalary) + 
+                    floatval($request->maintenance),
                 'total_profit' => floatval($request->totalProfit),
                 'per_day_profit' => floatval($request->perDayProfit)
             ];
@@ -283,13 +286,17 @@ class TripController extends Controller
                 'diesel_amount' => $request->dieselAmount ? floatval($request->dieselAmount) : $trip->diesel_amount,
                 'toll' => $request->toll ? floatval($request->toll) : $trip->toll,
                 'driver_salary' => $request->driverSalary ? floatval($request->driverSalary) : $trip->driver_salary,
-                'advanced_salary' => $request->advancedSalary ? floatval($request->advancedSalary) : $trip->advanced_salary,
+                'advanced_salary' => $request->has('advancedSalary') ? floatval($request->advancedSalary) : $trip->advanced_salary,
                 'maintenance' => $request->maintenance ? floatval($request->maintenance) : $trip->maintenance,
                 'freight' => $request->freight ? floatval($request->freight) : $trip->freight,
                 'weight' => $request->weight ? floatval($request->weight) : $trip->weight,
                 'total_freight' => $request->totalFreight ? floatval($request->totalFreight) : $trip->total_freight,
                 'total_km' => $request->totalKm ? floatval($request->totalKm) : $trip->total_km,
-                'total_expenses' => $request->totalExpenses ? floatval($request->totalExpenses) : $trip->total_expenses,
+                'total_expenses' => $request->totalExpenses ? floatval($request->totalExpenses) : 
+                    floatval($request->dieselAmount ?? $trip->diesel_amount) +
+                    floatval($request->toll ?? $trip->toll) +
+                    floatval($request->driverSalary ?? $trip->driver_salary) +
+                    floatval($request->maintenance ?? $trip->maintenance),
                 'total_profit' => $request->totalProfit ? floatval($request->totalProfit) : $trip->total_profit,
                 'per_day_profit' => $request->perDayProfit ? floatval($request->perDayProfit) : $trip->per_day_profit
             ]);

@@ -287,7 +287,7 @@ export default function TruckExpenses() {
                     </TableCell>
                     <TableCell>{expense.expense_type || 'N/A'}</TableCell>
                     <TableCell>
-                      {expense.date ? new Date(expense.date).toLocaleDateString() : 'N/A'}
+                      {expense.date ? new Date(expense.date).toLocaleDateString('en-GB') : 'N/A'}
                     </TableCell>
                     <TableCell>
                       {expense.amount ? `₹${Number(expense.amount).toFixed(2)}` : 'N/A'}

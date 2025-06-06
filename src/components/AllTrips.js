@@ -59,6 +59,9 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
   const mapTripToExport = (t) => {
     // Get diesel quantity from fuel_consumed field
     const dieselQty = t.fuel_consumed || 0;
+    // Ensure we get the correct advanced salary value, preserving 0
+    const advancedSalary = t.advanced_salary !== undefined ? t.advanced_salary : 
+                          (t.advancedSalary !== undefined ? t.advancedSalary : 0);
     
     return {
       "Trip Number": t.trip_number || t.tripNumber,
@@ -77,7 +80,7 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
       "Diesel Amount": t.diesel_amount || t.dieselAmount || 0,
       "Toll": t.toll || 0,
       "Driver Salary": t.driver_salary || t.driverSalary || 0,
-      "Advanced Salary": t.advanced_salary || t.advancedSalary || 0,
+      "Advanced Salary": Number(advancedSalary),
       "Maintenance": t.maintenance || 0,
       "Freight": t.freight || 0,
       "Weight": t.weight || 0,
@@ -167,104 +170,172 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
           <title>Trip Report</title>
           <style>
             body { font-family: Arial, sans-serif; }
-            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background-color: #f5f5f5; }
-            .header { text-align: center; margin-bottom: 20px; }
-            .total-row { font-weight: bold; background-color: #f9f9f9; }
+            .trip-card { 
+              border: 1px solid #ddd; 
+              margin-bottom: 20px; 
+              padding: 15px;
+              page-break-inside: avoid;
+            }
+            .trip-header {
+              background-color: #f5f5f5;
+              padding: 10px;
+              margin-bottom: 10px;
+              border-bottom: 2px solid #ddd;
+            }
+            .trip-details {
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 10px;
+            }
+            .detail-item {
+              display: flex;
+              margin-bottom: 5px;
+            }
+            .detail-label {
+              font-weight: bold;
+              width: 150px;
+            }
+            .header { 
+              margin-bottom: 20px;
+              border-bottom: 2px solid #333;
+              padding-bottom: 10px;
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+            }
+            .header-left {
+              display: flex;
+              flex-direction: column;
+              align-items: flex-start;
+            }
+            .header-right {
+              display: flex;
+              flex-direction: column;
+              align-items: flex-end;
+              text-align: right;
+            }
+            .logo {
+              width: 110px;
+              height: auto;
+              margin-bottom: 10px;
+            }
+            .total-section {
+              margin-top: 20px;
+              padding: 10px;
+              background-color: #f9f9f9;
+              border-top: 2px solid #ddd;
+            }
             @media print {
               .no-print { display: none; }
-              table { font-size: 12px; }
-              th, td { padding: 4px; }
+              .trip-card { margin-bottom: 30px; }
             }
           </style>
         </head>
         <body>
           <div class="header">
-            <h1>Advait Road Movers</h1>
-            <h2>Trip Report</h2>
-            <p>Generated on: ${new Date().toLocaleDateString()}</p>
+            <div class="header-left">
+              <img src="https://advaitroadmovers.com/logo.jpg" alt="Advait Road Movers" class="logo">
+            </div>
+            <div class="header-right">
+              <h2>Trip Report</h2>
+              <p>Generated on: ${new Date().toLocaleDateString('en-GB')}</p>
+            </div>
           </div>
           <div class="no-print">
             <button onclick="window.print()">Print Report</button>
           </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Trip Number</th>
-                <th>Truck</th>
-                <th>Driver Name</th>
-                <th>Start Date</th>
-                <th>End Date</th>
-                <th>From</th>
-                <th>To</th>
-                <th>Party Name</th>
-                <th>Compressor</th>
-                <th>Start KM</th>
-                <th>End KM</th>
-                <th>Total KM</th>
-                <th>Diesel Qty</th>
-                <th>Diesel Amount</th>
-                <th>Toll</th>
-                <th>Driver Salary</th>
-                <th>Advanced Salary</th>
-                <th>Maintenance</th>
-                <th>Freight</th>
-                <th>Weight</th>
-                <th>Total Freight</th>
-                <th>Total Expenses</th>
-                <th>Total Profit</th>
-                <th>Per Day Profit</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${tripsToPrint.map(trip => {
-                const exportObj = mapTripToExport(trip);
-                return `
-                <tr>
-                  <td>${exportObj["Trip Number"] || ''}</td>
-                  <td>${exportObj["Truck"] || ''}</td>
-                  <td>${exportObj["Driver Name"] || ''}</td>
-                  <td>${exportObj["Start Date"] ? new Date(exportObj["Start Date"]).toLocaleDateString() : ''}</td>
-                  <td>${exportObj["End Date"] ? new Date(exportObj["End Date"]).toLocaleDateString() : ''}</td>
-                  <td>${exportObj["From"] || ''}</td>
-                  <td>${exportObj["To"] || ''}</td>
-                  <td>${exportObj["Party Name"] || ''}</td>
-                  <td>${exportObj["Compressor"] || ''}</td>
-                  <td>${exportObj["Start KM"] || 0}</td>
-                  <td>${exportObj["End KM"] || 0}</td>
-                  <td>${exportObj["Total KM"] || 0}</td>
-                  <td>${Number(trip.fuel_consumed || 0).toFixed(2)}</td>
-                  <td>₹${Number(exportObj["Diesel Amount"] || 0).toFixed(2)}</td>
-                  <td>₹${Number(exportObj["Toll"] || 0).toFixed(2)}</td>
-                  <td>₹${Number(exportObj["Driver Salary"] || 0).toFixed(2)}</td>
-                  <td>₹${Number(exportObj["Advanced Salary"] || 0).toFixed(2)}</td>
-                  <td>₹${Number(exportObj["Maintenance"] || 0).toFixed(2)}</td>
-                  <td>₹${Number(exportObj["Freight"] || 0).toFixed(2)}</td>
-                  <td>${exportObj["Weight"] || 0}</td>
-                  <td>₹${Number(exportObj["Total Freight"] || 0).toFixed(2)}</td>
-                  <td>₹${Number(exportObj["Total Expenses"] || 0).toFixed(2)}</td>
-                  <td>₹${Number(exportObj["Total Profit"] || 0).toFixed(2)}</td>
-                  <td>₹${Number(exportObj["Per Day Profit"] || 0).toFixed(2)}</td>
-                </tr>
-              `}).join('')}
-              <tr class="total-row">
-                <td colspan="12">Total</td>
-                <td>${tripsToPrint.reduce((sum, t) => sum + Number(t.fuel_consumed || 0), 0).toFixed(2)}</td>
-                <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.diesel_amount || t.dieselAmount || 0), 0).toFixed(2)}</td>
-                <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.toll || 0), 0).toFixed(2)}</td>
-                <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.driver_salary || t.driverSalary || 0), 0).toFixed(2)}</td>
-                <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.advanced_salary || t.advancedSalary || 0), 0).toFixed(2)}</td>
-                <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.maintenance || 0), 0).toFixed(2)}</td>
-                <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.freight || 0), 0).toFixed(2)}</td>
-                <td></td>
-                <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.total_freight || t.totalFreight || 0), 0).toFixed(2)}</td>
-                <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.total_expenses || t.totalExpenses || 0), 0).toFixed(2)}</td>
-                <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.total_profit || t.totalProfit || 0), 0).toFixed(2)}</td>
-                <td>₹${tripsToPrint.reduce((sum, t) => sum + Number(t.per_day_profit || t.perDayProfit || 0), 0).toFixed(2)}</td>
-              </tr>
-            </tbody>
-          </table>
+          ${tripsToPrint.map(trip => {
+            const exportObj = mapTripToExport(trip);
+            return `
+            <div class="trip-card">
+              <div class="trip-header">
+                <h3>Trip Number: ${exportObj["Trip Number"] || ''}</h3>
+                <p>${exportObj["Start Date"] ? new Date(exportObj["Start Date"]).toLocaleDateString('en-GB') : ''} to ${exportObj["End Date"] ? new Date(exportObj["End Date"]).toLocaleDateString('en-GB') : ''}</p>
+              </div>
+              <div class="trip-details">
+                <div class="detail-item">
+                  <span class="detail-label">Truck:</span>
+                  <span>${exportObj["Truck"] || ''}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Driver Name:</span>
+                  <span>${exportObj["Driver Name"] || ''}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Route:</span>
+                  <span>${exportObj["From"] || ''} → ${exportObj["To"] || ''}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Party Name:</span>
+                  <span>${exportObj["Party Name"] || ''}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Compressor:</span>
+                  <span>${exportObj["Compressor"] || ''}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Start KM:</span>
+                  <span>${exportObj["Start KM"] || 0}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">End KM:</span>
+                  <span>${exportObj["End KM"] || 0}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Total KM:</span>
+                  <span>${exportObj["Total KM"] || 0}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Diesel Qty:</span>
+                  <span>${Number(trip.fuel_consumed || 0).toFixed(2)} L</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Diesel Amount:</span>
+                  <span>₹${Number(exportObj["Diesel Amount"] || 0).toFixed(2)}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Toll:</span>
+                  <span>₹${Number(exportObj["Toll"] || 0).toFixed(2)}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Driver Salary:</span>
+                  <span>₹${Number(exportObj["Driver Salary"] || 0).toFixed(2)}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Advanced Salary:</span>
+                  <span>₹${Number(exportObj["Advanced Salary"] || 0).toFixed(2)}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Maintenance:</span>
+                  <span>₹${Number(exportObj["Maintenance"] || 0).toFixed(2)}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Freight:</span>
+                  <span>₹${Number(exportObj["Freight"] || 0).toFixed(2)}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Weight:</span>
+                  <span>${exportObj["Weight"] || 0}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Total Freight:</span>
+                  <span>₹${Number(exportObj["Total Freight"] || 0).toFixed(2)}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Total Expenses:</span>
+                  <span>₹${Number(exportObj["Total Expenses"] || 0).toFixed(2)}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Total Profit:</span>
+                  <span>₹${Number(exportObj["Total Profit"] || 0).toFixed(2)}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Per Day Profit:</span>
+                  <span>₹${Number(exportObj["Per Day Profit"] || 0).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          `}).join('')}
         </body>
       </html>
     `;
@@ -314,7 +385,7 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
       dieselAmount: trip.diesel_amount || trip.dieselAmount || "",
       toll: trip.toll || "",
       driverSalary: trip.driver_salary || trip.driverSalary || "",
-      advancedSalary: trip.advanced_salary || trip.advancedSalary || "",
+      advancedSalary: trip.advanced_salary !== undefined ? trip.advanced_salary : (trip.advancedSalary !== undefined ? trip.advancedSalary : ""),
       maintenance: trip.maintenance || "",
       freight: trip.freight || "",
       weight: trip.weight || "",
@@ -334,7 +405,12 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
     // Always update the state so the user can type
     const newForm = { ...editForm, [name]: value };
 
-    // Validate End KM is greater than Start KM, but do not block typing
+    // Special handling for Advanced Salary
+    if (name === 'advancedSalary') {
+      newForm.advancedSalary = value === '' ? '' : Number(value);
+    }
+
+    // Rest of the validation and calculations...
     let error = "";
     if ((name === 'startKm' || name === 'endKm')) {
       const startKm = Number(name === 'startKm' ? value : newForm.startKm) || 0;
@@ -342,7 +418,6 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
       if (newForm.startKm !== "" && newForm.endKm !== "" && endKm <= startKm) {
         error = "End KM must be greater than Start KM";
       }
-      // Calculate Total KM if both are valid numbers
       if (!error && newForm.startKm !== "" && newForm.endKm !== "") {
         newForm.totalKm = endKm - startKm;
       } else {
@@ -359,28 +434,30 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
 
     // Calculate Total Expenses
     if (name === 'dieselAmount' || name === 'toll' || name === 'driverSalary' || 
-        name === 'advancedSalary' || name === 'maintenance') {
+        name === 'maintenance') {
       const dieselAmount = Number(newForm.dieselAmount) || 0;
       const toll = Number(newForm.toll) || 0;
       const driverSalary = Number(newForm.driverSalary) || 0;
-      const advancedSalary = Number(newForm.advancedSalary) || 0;
       const maintenance = Number(newForm.maintenance) || 0;
-      newForm.totalExpenses = dieselAmount + toll + driverSalary + advancedSalary + maintenance;
+      newForm.totalExpenses = dieselAmount + toll + driverSalary + maintenance;
     }
 
-    // Always calculate Total Profit and Per Day Profit after any change
-    const totalFreight = Number(newForm.totalFreight) || 0;
-    const totalExpenses = Number(newForm.totalExpenses) || 0;
-    newForm.totalProfit = totalFreight - totalExpenses;
+    // Calculate Total Profit and Per Day Profit
+    if (name === 'dieselAmount' || name === 'toll' || name === 'driverSalary' || 
+        name === 'maintenance' || name === 'freight' || name === 'weight' || 
+        name === 'startDate' || name === 'endDate') {
+      const totalFreight = Number(newForm.totalFreight) || 0;
+      const totalExpenses = Number(newForm.totalExpenses) || 0;
+      newForm.totalProfit = totalFreight - totalExpenses;
 
-    // Calculate Per Day Profit
-    const startDate = new Date(newForm.startDate);
-    const endDate = new Date(newForm.endDate);
-    const days = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)));
-    newForm.perDayProfit = newForm.totalProfit / days;
+      const startDate = new Date(newForm.startDate);
+      const endDate = new Date(newForm.endDate);
+      const days = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)));
+      newForm.perDayProfit = newForm.totalProfit / days;
+    }
 
     setEditForm(newForm);
-    setEditError(error); // Only set error, do not block typing
+    setEditError(error);
   };
 
   const toDateString = (date) => {
@@ -410,7 +487,7 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
         dieselAmount: Number(editForm.dieselAmount),
         toll: Number(editForm.toll),
         driverSalary: Number(editForm.driverSalary),
-        advancedSalary: Number(editForm.advancedSalary),
+        advancedSalary: editForm.advancedSalary === '' ? 0 : Number(editForm.advancedSalary),
         maintenance: Number(editForm.maintenance),
         freight: Number(editForm.freight),
         weight: Number(editForm.weight),
@@ -420,7 +497,7 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
         totalProfit: Number(editForm.totalProfit),
         perDayProfit: Number(editForm.perDayProfit)
       };
-      console.log('Trip update payload:', payload);
+
       // Check for missing required fields
       const requiredFields = [
         'truckNumber', 'driverName', 'from', 'to', 'startDate', 'endDate', 'partyName', 'startKm', 'endKm',
@@ -432,13 +509,45 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
         setEditError('Please fill all required fields: ' + missing.join(', '));
         return;
       }
+
       const response = await tripService.update(editingTrip.id, payload);
+      
       // Update trips state with the response data from the backend
       if (setTrips) {
-        setTrips(prevTrips => prevTrips.map(trip => 
-          trip.id === editingTrip.id ? response.data : trip
-        ));
+        setTrips(prevTrips => {
+          const updatedTrips = prevTrips.map(trip => 
+            trip.id === editingTrip.id ? {
+              ...response.data,
+              // Ensure we use the correct advanced salary value from the response
+              advancedSalary: response.data.advanced_salary,
+              advanced_salary: response.data.advanced_salary,
+              // Recalculate total expenses without advanced salary
+              totalExpenses: Number(response.data.diesel_amount) + 
+                           Number(response.data.toll) + 
+                           Number(response.data.driver_salary) + 
+                           Number(response.data.maintenance),
+              // Recalculate total profit
+              totalProfit: Number(response.data.total_freight) - 
+                          (Number(response.data.diesel_amount) + 
+                           Number(response.data.toll) + 
+                           Number(response.data.driver_salary) + 
+                           Number(response.data.maintenance))
+            } : trip
+          );
+          return updatedTrips;
+        });
       }
+
+      // Trigger a custom event to notify other components about the trip update
+      const event = new CustomEvent('tripUpdated', { 
+        detail: { 
+          tripId: editingTrip.id,
+          driverId: response.data.driver_id,
+          advancedSalary: response.data.advanced_salary
+        } 
+      });
+      window.dispatchEvent(event);
+
       setEditSuccess("Trip updated successfully.");
       setEditError("");
       setEditDialogOpen(false);
@@ -610,16 +719,18 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
                   // Format currency values
                   if (col.includes('Amount') || col.includes('Salary') || col.includes('Toll') || 
                       col.includes('Freight') || col.includes('Expenses') || col.includes('Profit')) {
-                    value = `₹${Number(value || 0).toFixed(2)}`;
+                    // Ensure we handle 0 values correctly
+                    const numValue = Number(value);
+                    value = `₹${numValue.toFixed(2)}`;
                   }
                   // Format dates
                   if (col.includes('Date') && value) {
-                    value = new Date(value).toLocaleDateString();
+                    value = new Date(value).toLocaleDateString('en-GB');
                   }
                   // Format numeric values without currency symbol
                   if (col === 'Diesel Qty' || col === 'Start KM' || col === 'End KM' || 
                       col === 'Total KM' || col === 'Weight') {
-                    value = Number(value || 0).toFixed(2);
+                    value = Number(value).toFixed(2);
                   }
                   // Special handling for truck display
                   if (col === 'Truck') {
@@ -656,29 +767,15 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
         </TableBody>
       </Table>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-        <DialogTitle>Delete Trip</DialogTitle>
-        <DialogContent>
-          {deleteError ? (
-            <Typography color="error">{deleteError}</Typography>
-          ) : (
-            <Typography>
-              Are you sure you want to delete trip {tripToDelete?.trip_number || tripToDelete?.tripNumber}?
-              This action cannot be undone.
-            </Typography>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteCancel}>Cancel</Button>
-          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-
       {/* Edit Trip Dialog */}
-      <Dialog open={editDialogOpen} onClose={handleEditCancel} maxWidth="md" fullWidth>
+      <Dialog 
+        open={editDialogOpen} 
+        onClose={handleEditCancel} 
+        maxWidth="md" 
+        fullWidth
+        disableEnforceFocus
+        disableAutoFocus
+      >
         <DialogTitle>Edit Trip</DialogTitle>
         <DialogContent>
           {editDialogOpen && editError && (
@@ -783,7 +880,14 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
               <TextField label="Driver Salary" name="driverSalary" type="number" value={editForm.driverSalary || ""} onChange={handleEditFormChange} fullWidth />
             </Grid>
             <Grid item xs={12} sm={6} md={4}>
-              <TextField label="Advanced Salary" name="advancedSalary" type="number" value={editForm.advancedSalary || ""} onChange={handleEditFormChange} fullWidth />
+              <TextField 
+                label="Advanced Salary" 
+                name="advancedSalary" 
+                type="number" 
+                value={editForm.advancedSalary === undefined || editForm.advancedSalary === null ? '' : editForm.advancedSalary} 
+                onChange={handleEditFormChange}
+                fullWidth 
+              />
             </Grid>
             <Grid item xs={12} sm={6} md={4}>
               <TextField label="Maintenance" name="maintenance" type="number" value={editForm.maintenance || ""} onChange={handleEditFormChange} fullWidth />
@@ -849,6 +953,32 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
         <DialogActions>
           <Button onClick={handleEditCancel}>Cancel</Button>
           <Button onClick={handleEditSave} variant="contained" color="primary">Save</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog 
+        open={deleteDialogOpen} 
+        onClose={handleDeleteCancel}
+        disableEnforceFocus
+        disableAutoFocus
+      >
+        <DialogTitle>Delete Trip</DialogTitle>
+        <DialogContent>
+          {deleteError ? (
+            <Typography color="error">{deleteError}</Typography>
+          ) : (
+            <Typography>
+              Are you sure you want to delete trip {tripToDelete?.trip_number || tripToDelete?.tripNumber}?
+              This action cannot be undone.
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+            Delete
+          </Button>
         </DialogActions>
       </Dialog>
     </Paper>

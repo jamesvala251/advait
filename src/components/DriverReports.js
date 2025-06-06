@@ -56,6 +56,21 @@ export default function DriverReports() {
     fetchReports();
   }, [filters]);
 
+  // Add event listener for trip updates
+  useEffect(() => {
+    const handleTripUpdate = (event) => {
+      // If we have a driver filter and it matches the updated trip's driver, refresh the reports
+      if (!filters.driver_id || filters.driver_id === event.detail.driverId) {
+        fetchReports();
+      }
+    };
+
+    window.addEventListener('tripUpdated', handleTripUpdate);
+    return () => {
+      window.removeEventListener('tripUpdated', handleTripUpdate);
+    };
+  }, [filters.driver_id]);
+
   const fetchReports = async () => {
     try {
       setLoading(true);
@@ -136,8 +151,8 @@ export default function DriverReports() {
           ${selectedReports.map(report => `
             <tr>
               <td>${report.driver_name}</td>
-              <td>${new Date(report.start_date).toLocaleDateString()}</td>
-              <td>${new Date(report.end_date).toLocaleDateString()}</td>
+              <td>${new Date(report.start_date).toLocaleDateString('en-GB')}</td>
+              <td>${new Date(report.end_date).toLocaleDateString('en-GB')}</td>
               <td>${report.origin}</td>
               <td>${report.destination}</td>
               <td style='text-align:right;'>₹${Number(report.driver_salary).toFixed(2)}</td>
@@ -271,8 +286,8 @@ export default function DriverReports() {
                       />
                     </TableCell>
                     <TableCell>{report.driver_name}</TableCell>
-                    <TableCell>{new Date(report.start_date).toLocaleDateString()}</TableCell>
-                    <TableCell>{new Date(report.end_date).toLocaleDateString()}</TableCell>
+                    <TableCell>{new Date(report.start_date).toLocaleDateString('en-GB')}</TableCell>
+                    <TableCell>{new Date(report.end_date).toLocaleDateString('en-GB')}</TableCell>
                     <TableCell>{report.origin}</TableCell>
                     <TableCell>{report.destination}</TableCell>
                     <TableCell align="right">₹{Number(report.driver_salary).toFixed(2)}</TableCell>
