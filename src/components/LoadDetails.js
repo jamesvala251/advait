@@ -59,9 +59,10 @@ export default function LoadDetails() {
   });
   const [selectedLoads, setSelectedLoads] = useState([]);
   const [filters, setFilters] = useState({
+    truckNumber: '',
     startDate: '',
     endDate: '',
-    truckId: ''
+    month: new Date().toISOString().slice(0, 7) // Default to current month (YYYY-MM)
   });
 
   const dialogButtonRef = useRef();
@@ -104,21 +105,51 @@ export default function LoadDetails() {
 
   // Filter loads based on selected criteria
   const filteredLoads = loads.filter(load => {
+    const matchesTruck = !filters.truckNumber || 
+      (load.truck && load.truck.truck_number === filters.truckNumber);
+    
+    // Convert dates to start of day for accurate comparison
     const loadDate = new Date(load.date);
+    loadDate.setHours(0, 0, 0, 0);
+    
     const startDate = filters.startDate ? new Date(filters.startDate) : null;
+    if (startDate) startDate.setHours(0, 0, 0, 0);
+    
     const endDate = filters.endDate ? new Date(filters.endDate) : null;
+    if (endDate) endDate.setHours(23, 59, 59, 999);
     
-    const dateInRange = (!startDate || loadDate >= startDate) && 
-                        (!endDate || loadDate <= endDate);
-    const truckMatch = !filters.truckId || load.truck_id === filters.truckId;
+    const matchesStartDate = !startDate || loadDate >= startDate;
+    const matchesEndDate = !endDate || loadDate <= endDate;
     
-    return dateInRange && truckMatch;
+    // Month filter logic
+    let matchesMonth = true;
+    if (filters.month) {
+      const [selectedYear, selectedMonth] = filters.month.split('-').map(Number);
+      const loadYear = loadDate.getFullYear();
+      const loadMonth = loadDate.getMonth() + 1; // JavaScript months are 0-based
+      
+      matchesMonth = loadYear === selectedYear && loadMonth === selectedMonth;
+      
+      // Debug logging
+      console.log('Month Filter Debug:', {
+        loadDate: loadDate.toISOString(),
+        selectedYear,
+        selectedMonth,
+        loadYear,
+        loadMonth,
+        matchesMonth
+      });
+    }
+    
+    return matchesTruck && matchesStartDate && matchesEndDate && matchesMonth;
   });
 
   // Sort filteredLoads by id ascending before rendering
   const sortedFilteredLoads = [...filteredLoads].sort((a, b) => a.id - b.id);
 
-  const handleFilterChange = (field, value) => {
+  const handleFilterChange = (field) => (event) => {
+    const value = event.target.value;
+    console.log('Filter Change:', { field, value });
     setFilters(prev => ({
       ...prev,
       [field]: value
@@ -126,10 +157,12 @@ export default function LoadDetails() {
   };
 
   const handleClearFilters = () => {
+    console.log('Clearing filters');
     setFilters({
+      truckNumber: '',
       startDate: '',
       endDate: '',
-      truckId: ''
+      month: new Date().toISOString().slice(0, 7)
     });
   };
 
@@ -362,7 +395,7 @@ export default function LoadDetails() {
         mb: 3 
       }}>
         <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold' }}>
-          Market Trucks
+          Load Details
         </Typography>
         <Box sx={{ 
           display: 'flex', 
@@ -404,12 +437,41 @@ export default function LoadDetails() {
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} sm={3}>
+            <FormControl fullWidth>
+              <InputLabel>Truck Number</InputLabel>
+              <Select
+                value={filters.truckNumber}
+                onChange={handleFilterChange('truckNumber')}
+                label="Truck Number"
+              >
+                <MenuItem value="">All Trucks</MenuItem>
+                {[...new Set(trucks.map(truck => truck.truck_number))]
+                  .filter(number => number)
+                  .map((number, index) => (
+                    <MenuItem key={`truck-${index}`} value={number}>
+                      {number}
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} sm={3}>
+            <TextField
+              fullWidth
+              type="month"
+              label="Month"
+              value={filters.month}
+              onChange={handleFilterChange('month')}
+              InputLabelProps={{ shrink: true }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={3}>
             <TextField
               fullWidth
               type="date"
               label="Start Date"
               value={filters.startDate}
-              onChange={(e) => handleFilterChange('startDate', e.target.value)}
+              onChange={handleFilterChange('startDate')}
               InputLabelProps={{ shrink: true }}
             />
           </Grid>
@@ -419,28 +481,11 @@ export default function LoadDetails() {
               type="date"
               label="End Date"
               value={filters.endDate}
-              onChange={(e) => handleFilterChange('endDate', e.target.value)}
+              onChange={handleFilterChange('endDate')}
               InputLabelProps={{ shrink: true }}
             />
           </Grid>
-          <Grid item xs={12} sm={3}>
-            <FormControl fullWidth>
-              <InputLabel>Truck Number</InputLabel>
-              <Select
-                value={filters.truckId}
-                onChange={(e) => handleFilterChange('truckId', e.target.value)}
-                label="Truck Number"
-              >
-                <MenuItem value="">All Trucks</MenuItem>
-                {trucks.map((truck) => (
-                  <MenuItem key={truck.id} value={truck.id}>
-                    {truck.truck_number}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={3}>
+          <Grid item xs={12}>
             <Button
               variant="outlined"
               onClick={handleClearFilters}

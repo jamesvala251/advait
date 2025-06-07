@@ -32,9 +32,10 @@ export default function DriverReports() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
-    driver_id: "",
-    start_date: "",
-    end_date: ""
+    driver: '',
+    startDate: '',
+    endDate: '',
+    month: new Date().toISOString().slice(0, 7) // Default to current month (YYYY-MM)
   });
   const [selected, setSelected] = useState([]);
   const printRef = useRef();
@@ -54,13 +55,13 @@ export default function DriverReports() {
 
   useEffect(() => {
     fetchReports();
-  }, [filters]);
+  }, []);
 
   // Add event listener for trip updates
   useEffect(() => {
     const handleTripUpdate = (event) => {
       // If we have a driver filter and it matches the updated trip's driver, refresh the reports
-      if (!filters.driver_id || filters.driver_id === event.detail.driverId) {
+      if (!filters.driver || filters.driver === event.detail.driverId) {
         fetchReports();
       }
     };
@@ -69,12 +70,13 @@ export default function DriverReports() {
     return () => {
       window.removeEventListener('tripUpdated', handleTripUpdate);
     };
-  }, [filters.driver_id]);
+  }, [filters.driver]);
 
   const fetchReports = async () => {
     try {
       setLoading(true);
-      const response = await driverReportService.getAll(filters);
+      const response = await driverReportService.getAll();
+      console.log('API Response:', response.data); // Debug log
       setReports(response.data.reports || []);
       setTotals(response.data.totals || {
         total_salary: 0,
@@ -93,11 +95,42 @@ export default function DriverReports() {
 
   const handleFilterChange = (field) => (event) => {
     const value = event.target.value;
-    setFilters(prev => ({
-      ...prev,
-      [field]: value || "" // Ensure empty string instead of undefined
-    }));
+    console.log('Filter changed:', field, value); // Debug log
+    setFilters(prev => {
+      const newFilters = {
+        ...prev,
+        [field]: value
+      };
+      console.log('New filters:', newFilters); // Debug log
+      return newFilters;
+    });
   };
+
+  // Filter reports based on selected criteria
+  const filteredReports = reports.filter(report => {
+    const matchesDriver = !filters.driver || report.driver_name === filters.driver;
+    const matchesStartDate = !filters.startDate || new Date(report.start_date) >= new Date(filters.startDate);
+    const matchesEndDate = !filters.endDate || new Date(report.end_date) <= new Date(filters.endDate);
+    
+    // Add month filter
+    const matchesMonth = !filters.month || 
+      (report.start_date && report.start_date.startsWith(filters.month)) ||
+      (report.end_date && report.end_date.startsWith(filters.month));
+    
+    return matchesDriver && matchesStartDate && matchesEndDate && matchesMonth;
+  });
+
+  // Calculate totals for filtered reports
+  const filteredTotals = filteredReports.reduce((acc, report) => {
+    acc.total_salary += Number(report.driver_salary) || 0;
+    acc.total_advanced += Number(report.advanced_salary) || 0;
+    acc.total_balanced += Number(report.balanced_salary) || 0;
+    return acc;
+  }, {
+    total_salary: 0,
+    total_advanced: 0,
+    total_balanced: 0
+  });
 
   // Selection logic
   const isSelected = (idx) => selected.indexOf(idx) !== -1;
@@ -185,48 +218,68 @@ export default function DriverReports() {
 
       {/* Filters */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={3}>
           <FormControl fullWidth>
             <InputLabel>Driver</InputLabel>
             <Select
-              value={filters.driver_id || ""}
-              onChange={handleFilterChange('driver_id')}
+              value={filters.driver}
+              onChange={handleFilterChange('driver')}
               label="Driver"
             >
-              <MenuItem value="" key="all-drivers">All Drivers</MenuItem>
-              {Array.from(
-                drivers.reduce((map, driver) => {
-                  const key = driver.id;
-                  if (!map.has(key)) map.set(key, driver);
-                  return map;
-                }, new Map()).values()
-              ).map((driver) => (
-                <MenuItem key={`driver-${driver.id}`} value={driver.id}>
-                  {driver.name}
-                </MenuItem>
-              ))}
+              <MenuItem value="">All Drivers</MenuItem>
+              {[...new Set(drivers.map(driver => driver.name))]
+                .filter(name => name) // Filter out any null/undefined names
+                .map((name, index) => (
+                  <MenuItem key={`driver-${index}`} value={name}>
+                    {name}
+                  </MenuItem>
+                ))}
             </Select>
           </FormControl>
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={3}>
+          <TextField
+            fullWidth
+            type="month"
+            label="Month"
+            value={filters.month}
+            onChange={handleFilterChange('month')}
+            InputLabelProps={{ shrink: true }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={3}>
           <TextField
             fullWidth
             type="date"
             label="Start Date"
-            value={filters.start_date || ""}
-            onChange={handleFilterChange('start_date')}
+            value={filters.startDate}
+            onChange={handleFilterChange('startDate')}
             InputLabelProps={{ shrink: true }}
           />
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={3}>
           <TextField
             fullWidth
             type="date"
             label="End Date"
-            value={filters.end_date || ""}
-            onChange={handleFilterChange('end_date')}
+            value={filters.endDate}
+            onChange={handleFilterChange('endDate')}
             InputLabelProps={{ shrink: true }}
           />
+        </Grid>
+        <Grid item xs={12}>
+          <Button
+            variant="outlined"
+            onClick={() => setFilters({
+              driver: '',
+              startDate: '',
+              endDate: '',
+              month: new Date().toISOString().slice(0, 7)
+            })}
+            fullWidth
+          >
+            Clear Filters
+          </Button>
         </Grid>
       </Grid>
 
@@ -275,7 +328,7 @@ export default function DriverReports() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {reports.map((report, index) => {
+              {filteredReports.map((report, index) => {
                 const isItemSelected = isSelected(index);
                 return (
                   <TableRow key={index} selected={isItemSelected}>
@@ -298,9 +351,9 @@ export default function DriverReports() {
               })}
               <TableRow>
                 <TableCell colSpan={6} align="right"><strong>Totals:</strong></TableCell>
-                <TableCell align="right"><strong>₹{Number(totals.total_salary).toFixed(2)}</strong></TableCell>
-                <TableCell align="right"><strong>₹{Number(totals.total_advanced).toFixed(2)}</strong></TableCell>
-                <TableCell align="right"><strong>₹{Number(totals.total_balanced).toFixed(2)}</strong></TableCell>
+                <TableCell align="right"><strong>₹{Number(filteredTotals.total_salary).toFixed(2)}</strong></TableCell>
+                <TableCell align="right"><strong>₹{Number(filteredTotals.total_advanced).toFixed(2)}</strong></TableCell>
+                <TableCell align="right"><strong>₹{Number(filteredTotals.total_balanced).toFixed(2)}</strong></TableCell>
               </TableRow>
             </TableBody>
           </Table>

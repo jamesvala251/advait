@@ -38,7 +38,8 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
     truckNumber: '',
     startDate: '',
     endDate: '',
-    loadCapacity: ''
+    loadCapacity: '',
+    month: new Date().toISOString().slice(0, 7) // Default to current month (YYYY-MM)
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [tripToDelete, setTripToDelete] = useState(null);
@@ -108,7 +109,12 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
     const matchesLoadCapacity = !filters.loadCapacity || 
       (trip.truck && trip.truck.capacity === filters.loadCapacity);
     
-    return matchesTruck && matchesStartDate && matchesEndDate && matchesLoadCapacity;
+    // Add month filter
+    const matchesMonth = !filters.month || 
+      (tripStartDate && tripStartDate.startsWith(filters.month)) ||
+      (tripEndDate && tripEndDate.startsWith(filters.month));
+    
+    return matchesTruck && matchesStartDate && matchesEndDate && matchesLoadCapacity && matchesMonth;
   });
 
   // Get unique truck numbers for the filter dropdown
@@ -638,7 +644,17 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
             </Select>
           </FormControl>
         </Grid>
-        <Grid item xs={12} sm={3}>
+        <Grid item xs={12} sm={2}>
+          <TextField
+            fullWidth
+            type="month"
+            label="Month"
+            value={filters.month}
+            onChange={handleFilterChange('month')}
+            InputLabelProps={{ shrink: true }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={2}>
           <TextField
             fullWidth
             type="date"
@@ -648,7 +664,7 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
             InputLabelProps={{ shrink: true }}
           />
         </Grid>
-        <Grid item xs={12} sm={3}>
+        <Grid item xs={12} sm={2}>
           <TextField
             fullWidth
             type="date"
@@ -657,6 +673,21 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
             onChange={handleFilterChange('endDate')}
             InputLabelProps={{ shrink: true }}
           />
+        </Grid>
+        <Grid item xs={12} sm={12}>
+          <Button
+            variant="outlined"
+            onClick={() => setFilters({
+              truckNumber: '',
+              startDate: '',
+              endDate: '',
+              loadCapacity: '',
+              month: new Date().toISOString().slice(0, 7)
+            })}
+            fullWidth
+          >
+            Clear Filters
+          </Button>
         </Grid>
       </Grid>
 
