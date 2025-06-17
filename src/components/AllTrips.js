@@ -297,27 +297,27 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
                 </div>
                 <div class="detail-item">
                   <span class="detail-label">Diesel Amount:</span>
-                  <span>₹${Number(exportObj["Diesel Amount"] || 0).toFixed(2)}</span>
+                  <span>${Number(exportObj["Diesel Amount"] || 0).toFixed(2)}</span>
                 </div>
                 <div class="detail-item">
                   <span class="detail-label">Toll:</span>
-                  <span>₹${Number(exportObj["Toll"] || 0).toFixed(2)}</span>
+                  <span>${Number(exportObj["Toll"] || 0).toFixed(2)}</span>
                 </div>
                 <div class="detail-item">
                   <span class="detail-label">Driver Salary:</span>
-                  <span>₹${Number(exportObj["Driver Salary"] || 0).toFixed(2)}</span>
+                  <span>${Number(exportObj["Driver Salary"] || 0).toFixed(2)}</span>
                 </div>
                 <div class="detail-item">
                   <span class="detail-label">Advanced Salary:</span>
-                  <span>₹${Number(exportObj["Advanced Salary"] || 0).toFixed(2)}</span>
+                  <span>${Number(exportObj["Advanced Salary"] || 0).toFixed(2)}</span>
                 </div>
                 <div class="detail-item">
                   <span class="detail-label">Maintenance:</span>
-                  <span>₹${Number(exportObj["Maintenance"] || 0).toFixed(2)}</span>
+                  <span>${Number(exportObj["Maintenance"] || 0).toFixed(2)}</span>
                 </div>
                 <div class="detail-item">
                   <span class="detail-label">Freight:</span>
-                  <span>₹${Number(exportObj["Freight"] || 0).toFixed(2)}</span>
+                  <span>${Number(exportObj["Freight"] || 0).toFixed(2)}</span>
                 </div>
                 <div class="detail-item">
                   <span class="detail-label">Weight:</span>
@@ -325,19 +325,19 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
                 </div>
                 <div class="detail-item">
                   <span class="detail-label">Total Freight:</span>
-                  <span>₹${Number(exportObj["Total Freight"] || 0).toFixed(2)}</span>
+                  <span>${Number(exportObj["Total Freight"] || 0).toFixed(2)}</span>
                 </div>
                 <div class="detail-item">
                   <span class="detail-label">Total Expenses:</span>
-                  <span>₹${Number(exportObj["Total Expenses"] || 0).toFixed(2)}</span>
+                  <span>${Number(exportObj["Total Expenses"] || 0).toFixed(2)}</span>
                 </div>
                 <div class="detail-item">
                   <span class="detail-label">Total Profit:</span>
-                  <span>₹${Number(exportObj["Total Profit"] || 0).toFixed(2)}</span>
+                  <span>${Number(exportObj["Total Profit"] || 0).toFixed(2)}</span>
                 </div>
                 <div class="detail-item">
                   <span class="detail-label">Per Day Profit:</span>
-                  <span>₹${Number(exportObj["Per Day Profit"] || 0).toFixed(2)}</span>
+                  <span>${Number(exportObj["Per Day Profit"] || 0).toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -752,7 +752,7 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
                       col.includes('Freight') || col.includes('Expenses') || col.includes('Profit')) {
                     // Ensure we handle 0 values correctly
                     const numValue = Number(value);
-                    value = `₹${numValue.toFixed(2)}`;
+                    value = `${numValue.toFixed(2)}`;
                   }
                   // Format dates
                   if (col.includes('Date') && value) {
@@ -761,7 +761,7 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
                   // Format numeric values without currency symbol
                   if (col === 'Diesel Qty' || col === 'Start KM' || col === 'End KM' || 
                       col === 'Total KM' || col === 'Weight') {
-                    value = Number(value).toFixed(2);
+                    value = `${Number(value).toFixed(2)}`;
                   }
                   // Special handling for truck display
                   if (col === 'Truck') {

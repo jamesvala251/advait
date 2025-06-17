@@ -178,10 +178,10 @@ export default function Reports({ trips, clearTrips }) {
 
         <Box sx={{ mt: 2 }}>
           <Typography variant="subtitle1" gutterBottom>Summary Results:</Typography>
-          <Typography><b>Total Profit:</b> ₹{totalProfit.toFixed(2)}</Typography>
-          <Typography><b>Total Expenses:</b> ₹{totalExpenses.toFixed(2)}</Typography>
+          <Typography><b>Total Profit:</b> {totalProfit.toFixed(2)}</Typography>
+          <Typography><b>Total Expenses:</b> {totalExpenses.toFixed(2)}</Typography>
           <Typography><b>Total Diesel Used:</b> {totalDiesel} L</Typography>
-          <Typography><b>Total Freight Earned:</b> ₹{totalFreight.toFixed(2)}</Typography>
+          <Typography><b>Total Freight Earned:</b> {totalFreight.toFixed(2)}</Typography>
         </Box>
       </Paper>
 
@@ -257,9 +257,9 @@ export default function Reports({ trips, clearTrips }) {
 
         <Box sx={{ mt: 2 }}>
           <Typography variant="subtitle1" gutterBottom>Salary Results:</Typography>
-          <Typography><b>Total Driver Salary:</b> ₹{totalDriverSalary.toFixed(2)}</Typography>
-          <Typography><b>Total Advanced Salary:</b> ₹{totalAdvancedSalary.toFixed(2)}</Typography>
-          <Typography><b>Balanced Salary (Driver - Advanced):</b> ₹{totalSalary.toFixed(2)}</Typography>
+          <Typography><b>Total Driver Salary:</b> {totalDriverSalary.toFixed(2)}</Typography>
+          <Typography><b>Total Advanced Salary:</b> {totalAdvancedSalary.toFixed(2)}</Typography>
+          <Typography><b>Balanced Salary (Driver - Advanced):</b> {totalSalary.toFixed(2)}</Typography>
         </Box>
       </Paper>
 

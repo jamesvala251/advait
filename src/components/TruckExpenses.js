@@ -290,7 +290,7 @@ export default function TruckExpenses() {
                       {expense.date ? new Date(expense.date).toLocaleDateString('en-GB') : 'N/A'}
                     </TableCell>
                     <TableCell>
-                      {expense.amount ? `₹${Number(expense.amount).toFixed(2)}` : 'N/A'}
+                      {expense.amount ? `${Number(expense.amount).toFixed(2)}` : 'N/A'}
                     </TableCell>
                     <TableCell>{expense.details || 'N/A'}</TableCell>
                     <TableCell align="right">
@@ -319,11 +319,11 @@ export default function TruckExpenses() {
               })}
               <TableRow key="totals-row">
                 <TableCell colSpan={3} align="right"><strong>Totals:</strong></TableCell>
-                <TableCell><strong>₹{Number(totals.total_amount).toFixed(2)}</strong></TableCell>
+                <TableCell><strong>{Number(totals.total_amount).toFixed(2)}</strong></TableCell>
                 <TableCell colSpan={2}>
                   <Typography variant="body2" color="text.secondary">
-                    Maintenance: ₹{Number(totals.maintenance_total).toFixed(2)} | 
-                    Tyre: ₹{Number(totals.tyre_total).toFixed(2)}
+                    Maintenance: {Number(totals.maintenance_total).toFixed(2)} | 
+                    Tyre: {Number(totals.tyre_total).toFixed(2)}
                   </Typography>
                 </TableCell>
               </TableRow>

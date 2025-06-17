@@ -59,13 +59,13 @@ export default function TruckManager({ trucks, setTrucks }) {
       return false;
     }
 
-    // Check if truck number already exists
-    const trucksArray = trucks?.data || [];
-    const truckNumberExists = trucksArray.some(
-      truck => truck.truck_number.toLowerCase() === form.truck_number.toLowerCase()
+    // Check if truck number already exists (excluding current truck if editing)
+    const existingTruck = trucks.find(
+      truck => truck.truck_number.toLowerCase() === form.truck_number.toLowerCase() &&
+      (!isEditing || truck.id !== editingTruckId)
     );
     
-    if (truckNumberExists) {
+    if (existingTruck) {
       setError("A truck with this number already exists");
       return false;
     }
@@ -193,19 +193,17 @@ export default function TruckManager({ trucks, setTrucks }) {
     deleteButtonRef.current?.focus();
   };
 
-  // Add function to refresh trucks data
+  // Update refreshTrucks function
   const refreshTrucks = async () => {
     try {
       setLoading(true);
       const response = await truckService.getAll();
-      console.log('Fetched trucks:', response.data);
-      setTrucks(response.data);
-      setSuccessMessage('Trucks list refreshed');
+      if (response.data?.data) {
+        setTrucks(response.data.data);
+        setSuccessMessage('Trucks list refreshed');
+      }
     } catch (err) {
       console.error('Error fetching trucks:', err);
-      console.error('Error response:', err.response?.data);
-      console.error('Error status:', err.response?.status);
-      
       let errorMessage = 'Failed to fetch trucks. ';
       if (err.response?.data?.message) {
         errorMessage += err.response.data.message;
@@ -214,7 +212,6 @@ export default function TruckManager({ trucks, setTrucks }) {
       } else {
         errorMessage += 'Please try again.';
       }
-      
       setError(errorMessage);
     } finally {
       setLoading(false);

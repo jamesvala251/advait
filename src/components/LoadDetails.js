@@ -312,12 +312,12 @@ export default function LoadDetails() {
                     <td>${truck ? truck.truck_number : 'N/A'}</td>
                     <td>${load.location}</td>
                     <td>${load.load_qty}</td>
-                    <td>₹${Number(load.freight).toFixed(2)}</td>
-                    <td>₹${Number(load.total_freight).toFixed(2)}</td>
-                    <td>₹${Number(load.advance_payment).toFixed(2)}</td>
-                    <td>₹${Number(load.diesel_amount).toFixed(2)}</td>
-                    <td>₹${Number(load.commission || 0).toFixed(2)}</td>
-                    <td>₹${Number(load.balance_payment).toFixed(2)}</td>
+                    <td>${Number(load.freight).toFixed(2)}</td>
+                    <td>${Number(load.total_freight).toFixed(2)}</td>
+                    <td>${Number(load.advance_payment).toFixed(2)}</td>
+                    <td>${Number(load.diesel_amount).toFixed(2)}</td>
+                    <td>${Number(load.commission || 0).toFixed(2)}</td>
+                    <td>${Number(load.balance_payment).toFixed(2)}</td>
                   </tr>
                 `;
               }).join('')}
@@ -348,12 +348,12 @@ export default function LoadDetails() {
         'Truck Number': truck ? truck.truck_number : 'N/A',
         'Location': load.location,
         'Load QTY': load.load_qty,
-        'Diesel Amount': `₹${Number(load.diesel_amount).toFixed(2)}`,
-        'Freight': `₹${Number(load.freight).toFixed(2)}`,
-        'Total Freight': `₹${Number(load.total_freight).toFixed(2)}`,
-        'Advance Payment': `₹${Number(load.advance_payment).toFixed(2)}`,
-        'Commission': `₹${Number(load.commission || 0).toFixed(2)}`,
-        'Balance Payment': `₹${Number(load.balance_payment).toFixed(2)}`
+        'Diesel Amount': `${Number(load.diesel_amount).toFixed(2)}`,
+        'Freight': `${Number(load.freight).toFixed(2)}`,
+        'Total Freight': `${Number(load.total_freight).toFixed(2)}`,
+        'Advance Payment': `${Number(load.advance_payment).toFixed(2)}`,
+        'Commission': `${Number(load.commission || 0).toFixed(2)}`,
+        'Balance Payment': `${Number(load.balance_payment).toFixed(2)}`
       };
     });
 
@@ -548,12 +548,12 @@ export default function LoadDetails() {
                   <TableCell>{truck ? truck.truck_number : 'N/A'}</TableCell>
                   <TableCell>{load.location}</TableCell>
                   <TableCell>{load.load_qty}</TableCell>
-                  <TableCell>₹{Number(load.freight).toFixed(2)}</TableCell>
-                  <TableCell>₹{Number(load.total_freight).toFixed(2)}</TableCell>
-                  <TableCell>₹{Number(load.advance_payment).toFixed(2)}</TableCell>
-                  <TableCell>₹{Number(load.diesel_amount).toFixed(2)}</TableCell>
-                  <TableCell>₹{Number(load.commission || 0).toFixed(2)}</TableCell>
-                  <TableCell>₹{Number(load.balance_payment).toFixed(2)}</TableCell>
+                  <TableCell>{Number(load.freight).toFixed(2)}</TableCell>
+                  <TableCell>{Number(load.total_freight).toFixed(2)}</TableCell>
+                  <TableCell>{Number(load.advance_payment).toFixed(2)}</TableCell>
+                  <TableCell>{Number(load.diesel_amount).toFixed(2)}</TableCell>
+                  <TableCell>{Number(load.commission || 0).toFixed(2)}</TableCell>
+                  <TableCell>{Number(load.balance_payment).toFixed(2)}</TableCell>
                   <TableCell align="right">
                     <Tooltip title="Edit Load">
                       <IconButton
@@ -583,12 +583,12 @@ export default function LoadDetails() {
             <TableRow sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
               <TableCell colSpan={5} sx={{ fontWeight: 'bold' }}>Total</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>{sortedFilteredLoads.reduce((sum, l) => sum + Number(l.load_qty || 0), 0)}</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>₹{sortedFilteredLoads.reduce((sum, l) => sum + Number(l.freight || 0), 0).toFixed(2)}</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>₹{sortedFilteredLoads.reduce((sum, l) => sum + Number(l.total_freight || 0), 0).toFixed(2)}</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>₹{sortedFilteredLoads.reduce((sum, l) => sum + Number(l.advance_payment || 0), 0).toFixed(2)}</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>₹{sortedFilteredLoads.reduce((sum, l) => sum + Number(l.diesel_amount || 0), 0).toFixed(2)}</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>₹{sortedFilteredLoads.reduce((sum, l) => sum + Number(l.commission || 0), 0).toFixed(2)}</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>₹{sortedFilteredLoads.reduce((sum, l) => sum + Number(l.balance_payment || 0), 0).toFixed(2)}</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>{sortedFilteredLoads.reduce((sum, l) => sum + Number(l.freight || 0), 0).toFixed(2)}</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>{sortedFilteredLoads.reduce((sum, l) => sum + Number(l.total_freight || 0), 0).toFixed(2)}</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>{sortedFilteredLoads.reduce((sum, l) => sum + Number(l.advance_payment || 0), 0).toFixed(2)}</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>{sortedFilteredLoads.reduce((sum, l) => sum + Number(l.diesel_amount || 0), 0).toFixed(2)}</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>{sortedFilteredLoads.reduce((sum, l) => sum + Number(l.commission || 0), 0).toFixed(2)}</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>{sortedFilteredLoads.reduce((sum, l) => sum + Number(l.balance_payment || 0), 0).toFixed(2)}</TableCell>
               <TableCell />
             </TableRow>
           </TableBody>

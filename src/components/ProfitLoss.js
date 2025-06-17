@@ -230,17 +230,17 @@ export default function ProfitLoss() {
                   <TableCell>{report.dates}</TableCell>
                   <TableCell>{report.route}</TableCell>
                   <TableCell align="right">{Number(report.total_km).toFixed(2)}</TableCell>
-                  <TableCell align="right">₹{Number(report.total_expenses).toFixed(2)}</TableCell>
-                  <TableCell align="right">₹{Number(report.total_profit).toFixed(2)}</TableCell>
-                  <TableCell align="right">₹{Number(report.per_day_profit).toFixed(2)}</TableCell>
+                  <TableCell align="right">{Number(report.total_expenses).toFixed(2)}</TableCell>
+                  <TableCell align="right">{Number(report.total_profit).toFixed(2)}</TableCell>
+                  <TableCell align="right">{Number(report.per_day_profit).toFixed(2)}</TableCell>
                 </TableRow>
               ))}
               <TableRow>
                 <TableCell colSpan={5} align="right"><strong>Totals:</strong></TableCell>
                 <TableCell align="right"><strong>{Number(totals.total_km).toFixed(2)}</strong></TableCell>
-                <TableCell align="right"><strong>₹{Number(totals.total_expenses).toFixed(2)}</strong></TableCell>
-                <TableCell align="right"><strong>₹{Number(totals.total_profit).toFixed(2)}</strong></TableCell>
-                <TableCell align="right"><strong>₹{Number(totals.total_per_day_profit).toFixed(2)}</strong></TableCell>
+                <TableCell align="right"><strong>{Number(totals.total_expenses).toFixed(2)}</strong></TableCell>
+                <TableCell align="right"><strong>{Number(totals.total_profit).toFixed(2)}</strong></TableCell>
+                <TableCell align="right"><strong>{Number(totals.total_per_day_profit).toFixed(2)}</strong></TableCell>
               </TableRow>
             </TableBody>
           </Table>

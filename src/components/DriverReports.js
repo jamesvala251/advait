@@ -188,9 +188,9 @@ export default function DriverReports() {
               <td>${new Date(report.end_date).toLocaleDateString('en-GB')}</td>
               <td>${report.origin}</td>
               <td>${report.destination}</td>
-              <td style='text-align:right;'>₹${Number(report.driver_salary).toFixed(2)}</td>
-              <td style='text-align:right;'>₹${Number(report.advanced_salary).toFixed(2)}</td>
-              <td style='text-align:right;'>₹${Number(report.balanced_salary).toFixed(2)}</td>
+              <td style='text-align:right;'>${Number(report.driver_salary).toFixed(2)}</td>
+              <td style='text-align:right;'>${Number(report.advanced_salary).toFixed(2)}</td>
+              <td style='text-align:right;'>${Number(report.balanced_salary).toFixed(2)}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -343,17 +343,17 @@ export default function DriverReports() {
                     <TableCell>{new Date(report.end_date).toLocaleDateString('en-GB')}</TableCell>
                     <TableCell>{report.origin}</TableCell>
                     <TableCell>{report.destination}</TableCell>
-                    <TableCell align="right">₹{Number(report.driver_salary).toFixed(2)}</TableCell>
-                    <TableCell align="right">₹{Number(report.advanced_salary).toFixed(2)}</TableCell>
-                    <TableCell align="right">₹{Number(report.balanced_salary).toFixed(2)}</TableCell>
+                    <TableCell align="right">{Number(report.driver_salary).toFixed(2)}</TableCell>
+                    <TableCell align="right">{Number(report.advanced_salary).toFixed(2)}</TableCell>
+                    <TableCell align="right">{Number(report.balanced_salary).toFixed(2)}</TableCell>
                   </TableRow>
                 );
               })}
               <TableRow>
                 <TableCell colSpan={6} align="right"><strong>Totals:</strong></TableCell>
-                <TableCell align="right"><strong>₹{Number(filteredTotals.total_salary).toFixed(2)}</strong></TableCell>
-                <TableCell align="right"><strong>₹{Number(filteredTotals.total_advanced).toFixed(2)}</strong></TableCell>
-                <TableCell align="right"><strong>₹{Number(filteredTotals.total_balanced).toFixed(2)}</strong></TableCell>
+                <TableCell align="right"><strong>{Number(filteredTotals.total_salary).toFixed(2)}</strong></TableCell>
+                <TableCell align="right"><strong>{Number(filteredTotals.total_advanced).toFixed(2)}</strong></TableCell>
+                <TableCell align="right"><strong>{Number(filteredTotals.total_balanced).toFixed(2)}</strong></TableCell>
               </TableRow>
             </TableBody>
           </Table>
