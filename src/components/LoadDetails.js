@@ -253,6 +253,15 @@ export default function LoadDetails() {
     const selectedLoadsData = sortedFilteredLoads.filter(load => selectedLoads.includes(load.id));
     if (selectedLoadsData.length === 0) return;
 
+    // Calculate totals for selected loads
+    const totals = {
+      total_freight: selectedLoadsData.reduce((sum, load) => sum + Number(load.total_freight || 0), 0),
+      advance_payment: selectedLoadsData.reduce((sum, load) => sum + Number(load.advance_payment || 0), 0),
+      diesel_amount: selectedLoadsData.reduce((sum, load) => sum + Number(load.diesel_amount || 0), 0),
+      commission: selectedLoadsData.reduce((sum, load) => sum + Number(load.commission || 0), 0),
+      balance_payment: selectedLoadsData.reduce((sum, load) => sum + Number(load.balance_payment || 0), 0)
+    };
+
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
       <html>
@@ -275,6 +284,7 @@ export default function LoadDetails() {
             table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
             th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
             th { background-color: #f5f5f5; }
+            .totals-row { background-color: #f5f5f5; font-weight: bold; }
             .footer { margin-top: 30px; text-align: center; }
             @media print {
               .no-print { display: none; }
@@ -321,6 +331,15 @@ export default function LoadDetails() {
                   </tr>
                 `;
               }).join('')}
+              <tr class="totals-row">
+                <td colspan="5"><strong>Total</strong></td>
+                <td></td>
+                <td><strong>${totals.total_freight.toFixed(2)}</strong></td>
+                <td><strong>${totals.advance_payment.toFixed(2)}</strong></td>
+                <td><strong>${totals.diesel_amount.toFixed(2)}</strong></td>
+                <td><strong>${totals.commission.toFixed(2)}</strong></td>
+                <td><strong>${totals.balance_payment.toFixed(2)}</strong></td>
+              </tr>
             </tbody>
           </table>
           <div class="footer">
@@ -340,6 +359,44 @@ export default function LoadDetails() {
     const selectedLoadsData = sortedFilteredLoads.filter(load => selectedLoads.includes(load.id));
     if (selectedLoadsData.length === 0) return;
 
+    console.log('Selected loads for export:', selectedLoadsData);
+
+    // Calculate totals for selected loads with better error handling
+    const totals = {
+      load_qty: selectedLoadsData.reduce((sum, load) => {
+        const value = parseFloat(load.load_qty) || 0;
+        console.log('Load QTY:', load.load_qty, 'Parsed:', value);
+        return sum + value;
+      }, 0),
+      total_freight: selectedLoadsData.reduce((sum, load) => {
+        const value = parseFloat(load.total_freight) || 0;
+        console.log('Total Freight:', load.total_freight, 'Parsed:', value);
+        return sum + value;
+      }, 0),
+      advance_payment: selectedLoadsData.reduce((sum, load) => {
+        const value = parseFloat(load.advance_payment) || 0;
+        console.log('Advance Payment:', load.advance_payment, 'Parsed:', value);
+        return sum + value;
+      }, 0),
+      diesel_amount: selectedLoadsData.reduce((sum, load) => {
+        const value = parseFloat(load.diesel_amount) || 0;
+        console.log('Diesel Amount:', load.diesel_amount, 'Parsed:', value);
+        return sum + value;
+      }, 0),
+      commission: selectedLoadsData.reduce((sum, load) => {
+        const value = parseFloat(load.commission) || 0;
+        console.log('Commission:', load.commission, 'Parsed:', value);
+        return sum + value;
+      }, 0),
+      balance_payment: selectedLoadsData.reduce((sum, load) => {
+        const value = parseFloat(load.balance_payment) || 0;
+        console.log('Balance Payment:', load.balance_payment, 'Parsed:', value);
+        return sum + value;
+      }, 0)
+    };
+
+    console.log('Calculated totals:', totals);
+
     // Prepare data for Excel
     const excelData = selectedLoadsData.map(load => {
       const truck = trucks.find(t => t.id === load.truck_id);
@@ -347,18 +404,53 @@ export default function LoadDetails() {
         'Date': new Date(load.date).toLocaleDateString('en-GB'),
         'Truck Number': truck ? truck.truck_number : 'N/A',
         'Location': load.location,
-        'Load QTY': load.load_qty,
-        'Diesel Amount': `${Number(load.diesel_amount).toFixed(2)}`,
-        'Freight': `${Number(load.freight).toFixed(2)}`,
-        'Total Freight': `${Number(load.total_freight).toFixed(2)}`,
-        'Advance Payment': `${Number(load.advance_payment).toFixed(2)}`,
-        'Commission': `${Number(load.commission || 0).toFixed(2)}`,
-        'Balance Payment': `${Number(load.balance_payment).toFixed(2)}`
+        'Load QTY': parseFloat(load.load_qty) || 0,
+        'Diesel Amount': parseFloat(load.diesel_amount) || 0,
+        'Freight': parseFloat(load.freight) || 0,
+        'Total Freight': parseFloat(load.total_freight) || 0,
+        'Advance Payment': parseFloat(load.advance_payment) || 0,
+        'Commission': parseFloat(load.commission) || 0,
+        'Balance Payment': parseFloat(load.balance_payment) || 0
       };
     });
 
+    // Add totals row
+    const totalsRow = {
+      'Date': 'TOTAL',
+      'Truck Number': '',
+      'Location': '',
+      'Load QTY': totals.load_qty,
+      'Diesel Amount': totals.diesel_amount,
+      'Freight': '',
+      'Total Freight': totals.total_freight,
+      'Advance Payment': totals.advance_payment,
+      'Commission': totals.commission,
+      'Balance Payment': totals.balance_payment
+    };
+
+    console.log('Totals row for Excel:', totalsRow);
+
+    // Add a blank row before totals
+    const blankRow = {
+      'Date': '',
+      'Truck Number': '',
+      'Location': '',
+      'Load QTY': '',
+      'Diesel Amount': '',
+      'Freight': '',
+      'Total Freight': '',
+      'Advance Payment': '',
+      'Commission': '',
+      'Balance Payment': ''
+    };
+
+    // Combine all data
+    const finalData = [...excelData, blankRow, totalsRow];
+
+    console.log('Final data for Excel:', finalData);
+
     // Create worksheet
-    const ws = XLSX.utils.json_to_sheet(excelData);
+    const ws = XLSX.utils.json_to_sheet(finalData);
 
     // Set column widths
     const columnWidths = [
@@ -374,6 +466,18 @@ export default function LoadDetails() {
       { wch: 15 }  // Balance Payment
     ];
     ws['!cols'] = columnWidths;
+
+    // Style the totals row (make it bold)
+    const lastRowIndex = finalData.length - 1;
+    const totalsRowIndex = lastRowIndex;
+
+    // Make totals label and values bold
+    ['A', 'D', 'E', 'G', 'H', 'I', 'J'].forEach(col => {
+      const cellRef = `${col}${totalsRowIndex + 1}`;
+      if (ws[cellRef]) {
+        ws[cellRef].s = { font: { bold: true } };
+      }
+    });
 
     // Create workbook
     const wb = XLSX.utils.book_new();

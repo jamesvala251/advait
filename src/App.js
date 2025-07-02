@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { truckService, tripService, expenseService } from "./services/api";
-import { trucks as testTrucks, trips as testTrips } from "./data/testData";
 import TruckManager from "./components/TruckManager";
 import TripEntryForm from "./components/TripEntryForm";
 import TripTable from "./components/TripTable";
