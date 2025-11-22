@@ -11,6 +11,8 @@ use App\Http\Controllers\Api\DriverController;
 use App\Http\Controllers\Api\TripProfitLossController;
 use App\Http\Controllers\Api\TruckExpenseController;
 use App\Http\Controllers\Api\LoadDetailController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\DriverSalaryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,6 +24,14 @@ use App\Http\Controllers\Api\LoadDetailController;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+
+// Authentication routes
+Route::post('/login', [AuthController::class, 'login']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/me', [AuthController::class, 'me']);
+});
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -79,3 +89,10 @@ Route::post('/load-details', [LoadDetailController::class, 'store']);
 Route::get('/load-details/{id}', [LoadDetailController::class, 'show']);
 Route::put('/load-details/{id}', [LoadDetailController::class, 'update']);
 Route::delete('/load-details/{id}', [LoadDetailController::class, 'destroy']);
+
+// Driver Salaries
+Route::get('/driver-salaries', [DriverSalaryController::class, 'index']);
+Route::post('/driver-salaries', [DriverSalaryController::class, 'store']);
+Route::get('/driver-salaries/{id}', [DriverSalaryController::class, 'show']);
+Route::put('/driver-salaries/{id}', [DriverSalaryController::class, 'update']);
+Route::delete('/driver-salaries/{id}', [DriverSalaryController::class, 'destroy']);

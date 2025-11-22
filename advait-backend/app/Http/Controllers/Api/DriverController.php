@@ -22,8 +22,10 @@ class DriverController extends Controller
                 'name',
                 'license_number',
                 'phone',
-                'status'
-            ])->get();
+                'status',
+                'address'
+            ])
+            ->get();
 
             Log::info('Retrieved drivers:', ['count' => $drivers->count()]);
             return response()->json($drivers);
@@ -49,7 +51,8 @@ class DriverController extends Controller
                 'name' => 'required|string|max:255',
                 'license_number' => 'required|string|unique:drivers',
                 'phone' => 'required|string|max:20',
-                'status' => 'required|in:active,inactive'
+                'status' => 'required|in:active,inactive',
+                'address' => 'nullable|string'
             ]);
 
             $driver = Driver::create($validated);
@@ -101,7 +104,8 @@ class DriverController extends Controller
                 'name' => 'sometimes|required|string|max:255',
                 'license_number' => 'sometimes|required|string|unique:drivers,license_number,' . $id,
                 'phone' => 'sometimes|required|string|max:20',
-                'status' => 'sometimes|required|in:active,inactive'
+                'status' => 'sometimes|required|in:active,inactive',
+                'address' => 'nullable|string'
             ]);
 
             $driver->update($validated);

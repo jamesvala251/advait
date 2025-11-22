@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// const API_URL = '/api';
-const API_URL = 'http://localhost:8000/api';
+const API_URL = 'https://advaitroadmovers.com/api';
+// const API_URL = 'http://127.0.0.1:8000/api';
 
 
 const api = axios.create({
@@ -56,7 +56,11 @@ export const reportService = {
 };
 
 export const driverService = {
-    getAll: () => api.get('/drivers')
+    getAll: () => api.get('/drivers'),
+    create: (data) => api.post('/drivers', data),
+    update: (id, data) => api.put(`/drivers/${id}`, data),
+    delete: (id) => api.delete(`/drivers/${id}`),
+    getById: (id) => api.get(`/drivers/${id}`)
 };
 
 export const driverReportService = {
@@ -105,6 +109,14 @@ export const loadDetailService = {
     update: (id, data) => api.put(`/load-details/${id}`, data),
     delete: (id) => api.delete(`/load-details/${id}`),
     getById: (id) => api.get(`/load-details/${id}`)
+};
+
+export const driverSalaryService = {
+    getAll: () => api.get('/driver-salaries'),
+    create: (data) => api.post('/driver-salaries', data),
+    update: (id, data) => api.put(`/driver-salaries/${id}`, data),
+    delete: (id) => api.delete(`/driver-salaries/${id}`),
+    getById: (id) => api.get(`/driver-salaries/${id}`)
 };
 
 export default api; 

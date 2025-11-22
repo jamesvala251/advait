@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useParams, useNavigate } from "react-router-dom";
 import { truckService, tripService, expenseService } from "./services/api";
 import TruckManager from "./components/TruckManager";
 import TripEntryForm from "./components/TripEntryForm";
@@ -7,6 +7,7 @@ import TripTable from "./components/TripTable";
 import Reports from "./components/Reports";
 import AllTrips from "./components/AllTrips";
 import DriverReports from "./components/DriverReports";
+import DriverManagement from "./components/DriverManagement";
 import TruckExpenses from "./components/TruckExpenses";
 import ProfitLoss from "./components/ProfitLoss";
 import LoadDetails from "./components/LoadDetails";
@@ -33,6 +34,7 @@ import TableChartIcon from '@mui/icons-material/TableChart';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import PersonIcon from '@mui/icons-material/Person';
 import ReceiptIcon from '@mui/icons-material/Receipt';
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Drawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
@@ -58,13 +60,14 @@ const theme = createTheme({
 });
 
 const NAV = [
-  { label: "Trip Entry", icon: <AssignmentIcon />, value: "entry" },
-  { label: "All Trips", icon: <TableChartIcon />, value: "alltrips" },
-  { label: "Truck Management", icon: <DirectionsCarIcon />, value: "trucks" },
-  { label: "Truck Expenses", icon: <ReceiptIcon />, value: "expenses" },
-  { label: "Market Trucks", icon: <AssignmentIcon />, value: "loads" },
+  { label: "Entry", icon: <AssignmentIcon />, value: "entry" },
+  { label: "Trips", icon: <TableChartIcon />, value: "alltrips" },
+  { label: "Trucks", icon: <DirectionsCarIcon />, value: "trucks" },
+  { label: "Expense", icon: <ReceiptIcon />, value: "expenses" },
+  { label: "Market", icon: <AssignmentIcon />, value: "loads" },
   { label: "Profit/Loss", icon: <TableChartIcon />, value: "profit" },
-  { label: "Driver Reports", icon: <PersonIcon />, value: "driverreports" },
+  { label: "Report", icon: <PersonIcon />, value: "driverreports" },
+  { label: "Drivers", icon: <ManageAccountsIcon />, value: "drivermanagement" },
 ];
 
 const ProtectedRoute = ({ children }) => {
@@ -81,6 +84,14 @@ const ProtectedRoute = ({ children }) => {
 const Dashboard = ({ page, setPage, error, loading, trucks, trips, expenses, addTrip, handleTripDelete, setTrips, setTrucks }) => {
   const isMobile = useMediaQuery('(max-width:600px)');
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Handle page change with URL update
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    navigate(`/dashboard/${newPage}`);
+  };
 
   return (
     <>
@@ -108,7 +119,7 @@ const Dashboard = ({ page, setPage, error, loading, trucks, trips, expenses, add
                   <List>
                     {NAV.map((nav) => (
                       <ListItem key={nav.value} disablePadding>
-                        <ListItemButton selected={page === nav.value} onClick={() => setPage(nav.value)}>
+                        <ListItemButton selected={page === nav.value} onClick={() => handlePageChange(nav.value)}>
                           <ListItemIcon>{nav.icon}</ListItemIcon>
                           <ListItemText primary={nav.label} />
                         </ListItemButton>
@@ -130,7 +141,7 @@ const Dashboard = ({ page, setPage, error, loading, trucks, trips, expenses, add
             <>
               <Tabs
                 value={page}
-                onChange={(_, v) => setPage(v)}
+                onChange={(_, v) => handlePageChange(v)}
                 textColor="inherit"
                 indicatorColor="secondary"
                 orientation="horizontal"
@@ -178,6 +189,7 @@ const Dashboard = ({ page, setPage, error, loading, trucks, trips, expenses, add
               {page === "loads" && <LoadDetails />}
               {page === "profit" && <ProfitLoss trips={trips} expenses={expenses} />}
               {page === "driverreports" && <DriverReports trips={trips} />}
+              {page === "drivermanagement" && <DriverManagement />}
             </Box>
           </Paper>
         )}
@@ -186,7 +198,8 @@ const Dashboard = ({ page, setPage, error, loading, trucks, trips, expenses, add
   );
 };
 
-function App() {
+// AppContent component that uses Router hooks
+function AppContent() {
   const [trucks, setTrucks] = useState([]);
   const [trips, setTrips] = useState([]);
   const [expenses, setExpenses] = useState([]);
@@ -194,6 +207,31 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem('isLoggedIn') === 'true');
+  const location = useLocation();
+
+  // Update page state based on URL path
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.includes('/dashboard/')) {
+      const pageFromPath = path.split('/dashboard/')[1];
+      if (pageFromPath && pageFromPath !== page) {
+        setPage(pageFromPath);
+      }
+    } else if (path === '/dashboard') {
+      setPage('entry');
+    }
+  }, [location.pathname, page]);
+
+  // Set initial page based on URL on first load
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === '/dashboard' || path === '/dashboard/') {
+      setPage('entry');
+    } else if (path.includes('/dashboard/')) {
+      const pageFromPath = path.split('/dashboard/')[1];
+      setPage(pageFromPath || 'entry');
+    }
+  }, []); // Run only on mount
 
   // Function to fetch all data
   const fetchData = async () => {
@@ -274,34 +312,42 @@ function App() {
   };
 
   return (
+    <ThemeProvider theme={theme}>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<Login onLogin={handleLogin} />} />
+        <Route path="/dashboard" element={<Navigate to="/dashboard/entry" replace />} />
+        <Route
+          path="/dashboard/*"
+          element={
+            <ProtectedRoute>
+              <Dashboard
+                page={page}
+                setPage={setPage}
+                error={error}
+                loading={loading}
+                trucks={trucks}
+                trips={trips}
+                expenses={expenses}
+                addTrip={addTrip}
+                handleTripDelete={handleTripDelete}
+                setTrips={setTrips}
+                setTrucks={setTrucks}
+              />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </ThemeProvider>
+  );
+}
+
+// Main App component that provides Router context
+function App() {
+  return (
     <Router>
-      <ThemeProvider theme={theme}>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<Login onLogin={handleLogin} />} />
-          <Route
-            path="/dashboard/*"
-            element={
-              <ProtectedRoute>
-                <Dashboard
-                  page={page}
-                  setPage={setPage}
-                  error={error}
-                  loading={loading}
-                  trucks={trucks}
-                  trips={trips}
-                  expenses={expenses}
-                  addTrip={addTrip}
-                  handleTripDelete={handleTripDelete}
-                  setTrips={setTrips}
-                  setTrucks={setTrucks}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </ThemeProvider>
+      <AppContent />
     </Router>
   );
 }

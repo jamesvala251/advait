@@ -57,7 +57,7 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
     "Trip Number", "Truck", "Driver Name", "Start Date", "End Date", "From", "To", "Party Name", "Compressor", "Start KM", "End KM", "Total KM", "Diesel Qty", "Diesel Amount", "Toll", "Driver Salary", "Advanced Salary", "Maintenance", "Freight", "Weight", "Total Freight", "Total Expenses", "Total Profit", "Per Day Profit"
   ];
 
-  const mapTripToExport = (t) => {
+  const mapTripToExport = (t, index = null) => {
     // Get diesel quantity from fuel_consumed field
     const dieselQty = t.fuel_consumed || 0;
     // Ensure we get the correct advanced salary value, preserving 0
@@ -65,7 +65,7 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
                           (t.advancedSalary !== undefined ? t.advancedSalary : 0);
     
     return {
-      "Trip Number": t.trip_number || t.tripNumber,
+      "Trip Number": index !== null ? index + 1 : (t.trip_number || t.tripNumber),
       "Truck": t.truck ? `${t.truck.truck_number} (${t.truck.model})` : 'No Truck',
       "Driver Name": t.driver ? t.driver.name : 'No Driver',
       "Start Date": t.start_date || t.startDate,
@@ -162,7 +162,7 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
   const handleExportSelected = () => {
     const selectedTripData = filteredTrips
       .filter(trip => selectedTrips.includes(trip.id))
-      .map(mapTripToExport);
+      .map((trip, index) => mapTripToExport(trip, index));
     exportToExcel(selectedTripData, "selected_trips.xlsx");
   };
 
@@ -250,12 +250,12 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
           <div class="no-print">
             <button onclick="window.print()">Print Report</button>
           </div>
-          ${tripsToPrint.map(trip => {
+          ${tripsToPrint.map((trip, index) => {
             const exportObj = mapTripToExport(trip);
             return `
             <div class="trip-card">
               <div class="trip-header">
-                <h3>Trip Number: ${exportObj["Trip Number"] || ''}</h3>
+                <h3>Trip Number: ${index + 1}</h3>
                 <p>${exportObj["Start Date"] ? new Date(exportObj["Start Date"]).toLocaleDateString('en-GB') : ''} to ${exportObj["End Date"] ? new Date(exportObj["End Date"]).toLocaleDateString('en-GB') : ''}</p>
               </div>
               <div class="trip-details">
@@ -694,7 +694,7 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         <Button 
           variant="outlined" 
-          onClick={() => exportToExcel(filteredTrips.map(mapTripToExport))} 
+          onClick={() => exportToExcel(filteredTrips.map((trip, index) => mapTripToExport(trip, index)))} 
           disabled={filteredTrips.length === 0}
         >
           Export All to Excel
@@ -734,8 +734,8 @@ export default function AllTrips({ trips, trucks, onTripDelete, setTrips }) {
           </TableRow>
         </TableHead>
         <TableBody>
-          {filteredTrips.map((t) => {
-            const exportObj = mapTripToExport(t);
+          {filteredTrips.map((t, index) => {
+            const exportObj = mapTripToExport(t, index);
             
             return (
               <TableRow key={t.id}>

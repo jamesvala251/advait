@@ -118,6 +118,7 @@ const MarketTrucks = () => {
       <table>
         <thead>
           <tr>
+            <th>Sr. No</th>
             <th>Truck Number</th>
             <th>Model</th>
             <th>Capacity</th>
@@ -128,8 +129,9 @@ const MarketTrucks = () => {
           </tr>
         </thead>
         <tbody>
-          ${trucksToPrint.map((truck) => `
+          ${trucksToPrint.map((truck, index) => `
             <tr>
+              <td>${index + 1}</td>
               <td>${truck.truck_number}</td>
               <td>${truck.model}</td>
               <td>${truck.capacity} Ton</td>
